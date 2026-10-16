@@ -19,7 +19,8 @@ previous=""
 [ -f .env ] && previous=$(grep -E '^IMAGE_TAG=' .env | cut -d= -f2 || true)
 { cat .env.local; printf 'GHCR_OWNER=%s\nIMAGE_TAG=%s\nPREVIOUS_IMAGE_TAG=%s\n' "$GHCR_OWNER" "$IMAGE_TAG" "$previous"; } > .env
 
-docker compose pull backend frontend
+# SKIP_PULL=1: the images were loaded onto the server directly (deploy-from-laptop.sh), no registry involved
+[ "${SKIP_PULL:-0}" = "1" ] || docker compose pull backend frontend
 docker compose up -d --remove-orphans
 
 healthy() {
