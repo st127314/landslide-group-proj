@@ -30,17 +30,17 @@ internet ─► host nginx (80/443, already serves the other app; adds TLS for l
 * *Alternative:* if you later want Traefik to own 80/443 (and do its own certificates), the other app has to move behind
   Traefik too (or nginx be retired). That is a bigger change to the live server and is not done here.
 
-## What the server looks like (inspected read-only on the first connection)
+## What the server looks like
 
-Ubuntu 26.04, 2 vCPU, **908 MB RAM (≈ 220 MB free), no swap, 4.2 GB disk free**; Docker 29 installed **without the
-compose plugin**; the host nginx serves `app.example.com` → a `example-app` container on `127.0.0.1:8050` with a
-certbot certificate. Nothing on the server has been changed yet.
+Ubuntu 26.04, 2 vCPU, **908 MB RAM, 1 GB swap (added by `bootstrap-server.sh --with-swap`), ~3 GB disk free**; Docker with
+the compose plugin; the host nginx also serves another app on `127.0.0.1:8050`. This stack only adds one nginx file and
+three containers.
 
-**Memory is the blocker.** The API loads the 426 k building footprints (140 MB GeoJSON) as Python objects, which needs
-roughly 2 GB, far above this instance's 908 MB. Options: resize the instance to ≥ 4 GB RAM (simplest, no code change),
-or first make the API light (serve buildings from an on-disk SQLite/R-tree instead of memory) and add swap
-(`bootstrap-server.sh --with-swap`) on a ≥ 2 GB instance. Do **not** enable the deploy job on the current size: an
-out-of-memory kill on this host could take the other app down too.
+**Memory decides what is deployed.** The API reads its data lazily, so the *light* deployment (live forecast, impact
+overlay, what-if scenario, susceptibility grid) needs about 150 MB of backend RAM (limit 450 MB). The 426 k building
+footprints (140 MB GeoJSON) need roughly 1.5 GB as Python objects and are **not uploaded** by default (`LIGHT=1`); the
+building-level endpoints answer 404 until they are (needs an instance with >= 4 GB). The container limits keep an
+out-of-memory kill inside the container instead of taking the other app down.
 
 ## Files
 
@@ -56,7 +56,9 @@ On the server (`/opt/landslide`): `project/{data,models,results}` (private data,
 
 ## One-time setup (when you are ready)
 
-1. **Size** — resolve the memory question above first.
+0. **No registry or GitHub secrets needed for a first deploy:** `apps/deploy/deploy-from-laptop.sh <key.pem> <user@host>`
+   runs steps 2, 3 and 5 below from your laptop (amd64 images over SSH). Steps 4 and 6 are for the automatic pipeline.
+1. **Size** — see the memory note above.
 2. **Prepare the server** (adds the compose plugin and folders only; read the script first):
    `ssh -i ml.pem ubuntu@<server-ip> 'bash -s' < apps/deploy/bootstrap-server.sh`
 3. **Upload the private data** (~250 MB): `apps/deploy/sync-data.sh ml.pem ubuntu@<server-ip>`
