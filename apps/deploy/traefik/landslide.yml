@@ -1,0 +1,38 @@
+# Traefik dynamic config. deploy.sh renders it to traefik/dynamic/landslide.yml (__DOMAIN__ <- .env.local).
+# To serve more subdomains with the same stack, add alternatives: Host(`a.example.com`) || Host(`b.example.com`).
+http:
+  routers:
+    landslide-api:
+      rule: "Host(`__DOMAIN__`) && PathPrefix(`/api/`)"
+      entryPoints: [web]
+      service: landslide-backend
+      middlewares: [landslide-ratelimit, landslide-compress, landslide-headers]
+      priority: 20
+    landslide-app:
+      rule: "Host(`__DOMAIN__`)"
+      entryPoints: [web]
+      service: landslide-frontend
+      middlewares: [landslide-compress, landslide-headers]
+      priority: 10
+  middlewares:
+    landslide-ratelimit:
+      rateLimit:
+        average: 20
+        burst: 60
+        period: 1s
+        sourceCriterion:
+          ipStrategy:
+            depth: 1                 # client IP as appended by the host nginx in X-Forwarded-For
+    landslide-compress:
+      compress: {}
+    landslide-headers:
+      headers:
+        contentTypeNosniff: true
+        referrerPolicy: strict-origin-when-cross-origin
+  services:
+    landslide-backend:
+      loadBalancer:
+        servers: [{ url: "http://backend:8000" }]
+    landslide-frontend:
+      loadBalancer:
+        servers: [{ url: "http://frontend:3000" }]

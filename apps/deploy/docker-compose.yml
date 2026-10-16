@@ -1,0 +1,66 @@
+# Production stack behind Traefik: traefik -> frontend (Next.js) + backend (FastAPI /api).
+# Routing is defined in traefik/landslide.yml (file provider), NOT with Docker labels, so Traefik never needs
+# access to the Docker socket (on a shared server that socket is root-equivalent).
+#
+# Ports: Traefik listens ONLY on 127.0.0.1:${TRAEFIK_PORT} (default 8088). The server's existing host nginx
+# receives the public traffic for the landslide subdomain, terminates HTTPS (certbot) and forwards to that port,
+# so nothing here competes with the other app for ports 80/443.
+#
+# Images come from GitHub Container Registry; the pipeline data is NOT in them but mounted read-only from
+# /opt/landslide/project (upload it with apps/deploy/sync-data.sh).
+name: landslide
+
+services:
+  traefik:
+    image: traefik:v3.1
+    restart: unless-stopped
+    command:
+      - --providers.file.directory=/etc/traefik/dynamic
+      - --providers.file.watch=true
+      - --entrypoints.web.address=:80
+      # trust X-Forwarded-For from the host nginx (arrives from the docker bridge) so rate limiting sees real client IPs
+      - --entrypoints.web.forwardedheaders.trustedips=127.0.0.1/32,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
+      - --ping=true
+      - --log.level=INFO
+      - --accesslog=false
+    ports:
+      - "127.0.0.1:${TRAEFIK_PORT:-8088}:80"
+    volumes:
+      - ./traefik/dynamic:/etc/traefik/dynamic:ro
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 96m
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    depends_on: [backend, frontend]
+
+  backend:
+    image: ghcr.io/${GHCR_OWNER}/landslide-backend:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    environment:
+      LANDSLIDE_ROOT: /srv/project
+    volumes:
+      - ${DATA_ROOT:-/opt/landslide/project}/data:/srv/project/data:ro
+      - ${DATA_ROOT:-/opt/landslide/project}/models:/srv/project/models:ro
+      - ${DATA_ROOT:-/opt/landslide/project}/results:/srv/project/results:ro
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: ${BACKEND_MEM_LIMIT:-3g}
+    expose: ["8000"]
+
+  frontend:
+    image: ghcr.io/${GHCR_OWNER}/landslide-frontend:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    environment:
+      INTERNAL_API_URL: http://backend:8000
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: ${FRONTEND_MEM_LIMIT:-300m}
+    depends_on: [backend]
+    expose: ["3000"]

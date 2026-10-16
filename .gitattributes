@@ -1,0 +1,2 @@
+# Strip local absolute paths from notebook outputs when committing (filter defined in each clone's .git/config)
+*.ipynb filter=scrubpaths

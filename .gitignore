@@ -1,0 +1,41 @@
+# PUBLIC repo = apps/, notebooks/, tests/ (+ README.md). Everything else is private and stays local.
+# Whitelist approach: ignore everything at the top level, then re-include only the public parts.
+/*
+!/.gitignore
+!/.gitattributes
+!/.github/
+!/README.md
+!/apps/
+!/notebooks/
+!/tests/
+
+# Never track these, even inside the public folders
+node_modules/
+.next/
+out/
+.venv/
+venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.matplotlib_cache/
+.env
+.env.*
+*.log
+.DS_Store
+*.tsbuildinfo
+next-env.d.ts
+
+# Data, models, outputs and credentials must never appear under the public folders either
+*.joblib
+*.tif
+*.gpkg
+*.geojson
+*.zip
+service_account/
+key.json
+*privatekey*.json
+*.pem
+*.key
+id_rsa*
+active.conf

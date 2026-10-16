@@ -1,0 +1,22 @@
+# Site block for the server's existing HOST nginx (it also serves other apps). Installed by install-nginx-site.sh
+# into /etc/nginx/conf.d/landslide.conf (__DOMAIN__ and __PORT__ are filled in). It forwards everything for this
+# name to Traefik on 127.0.0.1:__PORT__. `certbot --nginx` (enable-https.sh) adds the HTTPS block later.
+server {
+    listen 80;
+    listen [::]:80;
+    server_name __DOMAIN__;
+
+    client_max_body_size 1m;
+
+    location / {
+        proxy_pass http://127.0.0.1:__PORT__;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_read_timeout 120s;          # the API's first request loads the data into memory
+    }
+}
