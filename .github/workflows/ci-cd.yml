@@ -31,10 +31,32 @@ jobs:
           cache: pip
           cache-dependency-path: apps/backend/requirements*.txt
       - run: pip install -r apps/backend/requirements.txt -r apps/backend/requirements-dev.txt
-      - name: API tests (synthetic fixtures; no private data needed)
+      - name: API tests (synthetic fixtures)
         run: python -m pytest apps/backend/tests -q
-      - name: Pipeline unit tests (skipped here because the private scripts are not in this repo)
-        run: python -m unittest discover -s tests -v
+
+  test-data-model:
+    name: Data and model tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: tests/requirements.txt
+      - run: pip install -r tests/requirements.txt
+      - name: Processed-data integrity, modelling helpers, spatial CV and baseline guard
+        run: python -m pytest tests -q
+
+  check-deploy-config:
+    name: Deployment configuration checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Shell scripts parse
+        run: for f in apps/deploy/*.sh; do bash -n "$f"; done
+      - name: Compose file is valid
+        run: GHCR_OWNER=ci IMAGE_TAG=ci docker compose -f apps/deploy/docker-compose.yml config -q
 
   test-frontend:
     name: Frontend lint + build
@@ -59,7 +81,7 @@ jobs:
   build-images:
     name: Build & push images
     if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
-    needs: [test-backend, test-frontend]
+    needs: [test-backend, test-data-model, test-frontend, check-deploy-config]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -142,7 +164,7 @@ jobs:
           ssh $SSH_OPTS "$EC2_USER@$EC2_HOST" "chmod +x /opt/landslide/*.sh && IMAGE_TAG='$IMAGE_TAG' GHCR_OWNER='$GHCR_OWNER' /opt/landslide/deploy.sh"
       - name: Smoke test through Traefik (on the server)
         run: |
-          ssh $SSH_OPTS "$EC2_USER@$EC2_HOST" 'set -a; . /opt/landslide/.env.local; set +a; curl -fsS -H "Host: ${DOMAIN:-landslide.spadace.com}" "http://127.0.0.1:${TRAEFIK_PORT:-8088}/api/health"'
+          ssh $SSH_OPTS "$EC2_USER@$EC2_HOST" 'set -a; . /opt/landslide/.env.local; set +a; H="Host: ${DOMAIN:-landslide.spadace.com}"; B="http://127.0.0.1:${TRAEFIK_PORT:-8088}"; curl -fsS -H "$H" "$B/api/health" && curl -fsS -o /dev/null -H "$H" "$B/api/status" && curl -fsS -o /dev/null -H "$H" "$B/"'
       - name: Clean up key
         if: always()
         run: rm -f ~/.ssh/deploy_key ~/.ssh/known_hosts

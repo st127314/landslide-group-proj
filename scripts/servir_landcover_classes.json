@@ -1,0 +1,103 @@
+{
+  "source": "https://landcovermapping.org/static/app/config/settings.js",
+  "definition": "landCoverClasses",
+  "retrieved": "2026-09-09",
+  "source_sha256": "3b093fc8f84c85d1f87ab742aa64c71aca3ced200c5be7aa205994a85af1efee",
+  "classes": [
+    {
+      "value": 1,
+      "name": "aquaculture",
+      "color": "#29B6F6"
+    },
+    {
+      "value": 2,
+      "name": "barren",
+      "color": "#CCCCCC"
+    },
+    {
+      "value": 3,
+      "name": "cropland",
+      "color": "#F2E527"
+    },
+    {
+      "value": 4,
+      "name": "cropPlantation",
+      "color": "#F4CCCC"
+    },
+    {
+      "value": 5,
+      "name": "deciduous",
+      "color": "#70A800"
+    },
+    {
+      "value": 6,
+      "name": "evergreen",
+      "color": "#267300"
+    },
+    {
+      "value": 7,
+      "name": "floodedForest",
+      "color": "#B4D79E"
+    },
+    {
+      "value": 8,
+      "name": "forestPlantation",
+      "color": "#C49963"
+    },
+    {
+      "value": 9,
+      "name": "grass",
+      "color": "#D7C29E"
+    },
+    {
+      "value": 10,
+      "name": "mangrove",
+      "color": "#FF7FBF"
+    },
+    {
+      "value": 11,
+      "name": "otherForest",
+      "color": "#AA66CD"
+    },
+    {
+      "value": 12,
+      "name": "palm",
+      "color": "#F5F57A"
+    },
+    {
+      "value": 13,
+      "name": "rice",
+      "color": "#FFFFBE"
+    },
+    {
+      "value": 14,
+      "name": "rubber",
+      "color": "#AAFF00"
+    },
+    {
+      "value": 15,
+      "name": "shrub",
+      "color": "#89CD66"
+    },
+    {
+      "value": 16,
+      "name": "urban",
+      "color": "#E600A9"
+    },
+    {
+      "value": 17,
+      "name": "water",
+      "color": "#004DA8"
+    },
+    {
+      "value": 18,
+      "name": "wetland",
+      "color": "#91E5A5"
+    },
+    {
+      "value": 19,
+      "name": "snow",
+      "color": "#F4F4F4"
+    }
+  ]
+}

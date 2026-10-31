@@ -1,0 +1,24 @@
+# Pipeline, notebooks, overlay, figures (Python 3.12+; developed on 3.14)
+numpy
+pandas>=2
+geopandas>=1.1
+shapely>=2
+pyogrio
+pyproj
+scipy
+scikit-learn>=1.2
+xgboost
+lightgbm
+joblib
+matplotlib
+seaborn
+jupyter
+requests
+earthengine-api>=1.7   # only for the Earth Engine steps (needs your own credentials)
+
+# Not installable from PyPI reliably: GDAL's Python bindings (`osgeo`), used by
+# scripts/build_impact_overlay.py and scripts/download_worldpop_population.py.
+# Install GDAL with your system package manager (e.g. `brew install gdal`) and the
+# matching Python package.
+
+# Web app: apps/backend/requirements.txt (FastAPI) and apps/frontend/package.json (Next.js).

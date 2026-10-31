@@ -1,0 +1,25 @@
+{
+  "source": "Hartmann, J. and Moosdorf, N. (2012), The new global lithological map database GLiM: A representation of rock properties at the Earth surface, Geochemistry, Geophysics, Geosystems, 13, Q12004",
+  "doi": "10.1029/2012GC004370",
+  "dataset": "GLiM v1.1 (LiMW_GIS 2015.gdb), level-1 classification (field xx)",
+  "license": "Free for scientific/non-commercial use with citation of Hartmann and Moosdorf (2012); see https://www.geo.uni-hamburg.de/en/geologie/forschung/aquatische-geochemie/glim.html",
+  "note": "GLiM's xx field holds the level-1 code used here; Litho holds a longer compound level-1/2/3 sub-lithology code (e.g. 'suad__'), not a plain description, and is dropped on export. The integer value here is assigned by this project (litho_code) to make the level-1 class usable as a numeric raster band in Earth Engine.",
+  "classes": [
+    {"value": 1, "code": "su", "name": "Unconsolidated sediments"},
+    {"value": 2, "code": "ss", "name": "Siliciclastic sedimentary rocks"},
+    {"value": 3, "code": "sm", "name": "Mixed sedimentary rocks"},
+    {"value": 4, "code": "sc", "name": "Carbonate sedimentary rocks"},
+    {"value": 5, "code": "py", "name": "Pyroclastics"},
+    {"value": 6, "code": "ev", "name": "Evaporites"},
+    {"value": 7, "code": "mt", "name": "Metamorphics"},
+    {"value": 8, "code": "pa", "name": "Acid plutonic rocks"},
+    {"value": 9, "code": "pi", "name": "Intermediate plutonic rocks"},
+    {"value": 10, "code": "pb", "name": "Basic plutonic rocks"},
+    {"value": 11, "code": "va", "name": "Acid volcanic rocks"},
+    {"value": 12, "code": "vi", "name": "Intermediate volcanic rocks"},
+    {"value": 13, "code": "vb", "name": "Basic volcanic rocks"},
+    {"value": 14, "code": "ig", "name": "Ice and glaciers"},
+    {"value": 15, "code": "wb", "name": "Water bodies"},
+    {"value": 16, "code": "nd", "name": "No data"}
+  ]
+}

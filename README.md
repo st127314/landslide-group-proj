@@ -1,10 +1,10 @@
-# Landslide Susceptibility Mapping and Rainfall-Triggered Early Warning — Southern Thailand
+# Landslide Susceptibility Mapping and Rainfall-Based Impact Triage — Southern Thailand
 
 A landslide susceptibility model plus a live-impact view for the 14 southern provinces of Thailand:
 
 1. **Susceptibility model** — where is terrain prone to landslides? (20 conditioning factors, 6,180 landslide + 6,180 paired non-landslide points, spatial cross-validation, calibrated scores, 250 m map.) **This is the validated part of the project.**
 2. **Live forecast rainfall** — NOAA GFS rainfall for the next 24 / 48 / 72 h per tambon, judged against each tambon's own rainfall climate (wet-day percentiles P75/P90/P95 from 30 years of CHIRPS). No machine-learning model: an exploratory rainfall model was tried and shown to have no skill (hold-out ROC-AUC 0.34; `notebooks/rainfall_trigger_threshold.ipynb`, kept as a documented negative result).
-3. **Live impact overlay and what-if scenario** — terrain factor × local rain class → impact class per tambon, plus a "what if X mm falls?" scenario (no AI assistant, no extra model); with the buildings, critical facilities and people at elevated risk. A transparent triage rule, **not a validated landslide forecast**.
+3. **Live impact overlay and what-if scenario** — terrain factor × local rain class → impact class per tambon, plus a "what if X mm falls?" scenario (no extra model); with the buildings, critical facilities and people at elevated risk. A transparent triage rule, **not a validated landslide forecast**.
 
 Read `docs/METHODS.md` first for how everything was built and, importantly, its **Known issues** section before relying on any number here.
 
@@ -15,13 +15,19 @@ The repository holds what a team member needs to run and extend the modelling no
 | Path | Contents |
 |---|---|
 | `notebooks/` | susceptibility modelling and rainfall-trigger notebooks, plus `susc_utils.py` |
+| `notebooks/experiments/run_experiments.py` | supplementary experiments E1–E7, error analysis and partial dependence reported in the progress report |
+| `scripts/` | data pipeline: Earth Engine extraction, negative sampling, cleaning, grid prediction, rainfall percentiles, live forecast, impact overlay, figures (see `scripts/README.md`) |
 | `data/processed/landslide_event_factors_cleaned.csv` | model-ready table: 6,180 landslide + 6,180 paired non-landslide points, 20 conditioning factors (input of the susceptibility notebook) |
 | `data/processed/*_antecedent_rainfall.csv` | IMERG antecedent rainfall per event (input of the rainfall-trigger notebook) |
 | `data/processed/landslide_event_factors_cleaning_report.txt`, `data/DATA_DICTIONARY.md` | how the table was cleaned; meaning of every column |
-| `docs/` | methods, data sources, dataset descriptions, proposal report and slides |
+| `models/*/model_metadata.json`, `models/rainfall_trigger/rainfall_trigger_metadata.json` | cross-validation and hold-out scores of every candidate model, selected hyperparameters |
+| `results/experiments/` | outputs of the supplementary experiments (`results.json`, `errors.json`) and the province of each point used for E5 |
+| `results/figures/` | susceptibility map, live-impact map, model comparison and exposure figures |
+| `docs/` | methods (including data sources), dataset descriptions, proposal report and slides |
+| `requirements.txt` | Python dependencies for the pipeline and notebooks |
 | `apps/`, `tests/`, `.github/` | API, dashboard, tests and CI/CD |
 
-**Kept outside git on purpose:** the raw landslide inventory and source spreadsheets, the raw Earth Engine samples, external layers (OSM, WorldPop, GLiM, GEM, GADM boundaries), the 250 m factor grid, trained models, results and credentials. GADM boundaries may not be redistributed, and the large layers exceed GitHub's file limits. Clone the repo, install `requirements.txt` (or `notebooks/requirements-modeling.txt`) and run the notebooks from the project root; they write models to `models/`, which stays local.
+**Kept outside git on purpose:** the raw landslide inventory and source spreadsheets, the raw Earth Engine samples, external layers (OSM, WorldPop, GLiM, GEM, GADM boundaries), the 250 m factor grid, the scored map, trained model files and credentials. GADM boundaries may not be redistributed, and the large layers exceed GitHub's file limits. Clone the repo, install `requirements.txt` (or `notebooks/requirements-modeling.txt`) and run the notebooks from the project root; they write trained model files to `models/`, which are not tracked. The Earth Engine scripts need your own service-account key and copies of the input assets (see `scripts/README.md`).
 
 The landslide inventory was provided by ADPC; cite it accordingly when reusing the processed tables.
 
@@ -40,6 +46,8 @@ The landslide inventory was provided by ADPC; cite it accordingly when reusing t
 Figures are in `results/figures/`. Terrain scores are relative rankings under 1:1 pseudo-absence sampling, not calibrated real-world probabilities, and the negatives are easy lowland points (Known issue 4). The rain thresholds are local climate percentiles, not calibrated on landslides.
 
 ## Folder layout
+
+The layout below is the team's full working folder. The repository holds the paths listed in the table above; the remaining files under `data/`, `models/` and `results/` are produced locally by the pipeline, and `FILE_MANIFEST.csv` stays in the working folder. Their contents are described here for reference.
 
 ```
 README.md                  this file
@@ -63,10 +71,10 @@ notebooks/                 the two modelling notebooks (+ susc_utils.py needed t
 scripts/                   data-acquisition and pipeline scripts (see scripts/README.md)
 apps/                      FastAPI backend + Next.js frontend that serve the results (see apps/README.md)
 tests/                     unit tests for the Earth Engine extraction logic
-docs/                      METHODS.md, DATA_SOURCES.md, original parameter list (.docx)
+docs/                      METHODS.md, dataset descriptions, proposal report and slides
 ```
 
-Left out on purpose (the project is about 460 MB; everything below is regenerable or an intermediate):
+Also left out of the local submission folder (the project is about 460 MB; everything below is regenerable or an intermediate):
 
 - the OSM roads / rivers / waterways, GEM faults and GLiM lithology GeoJSON layers (about 390 MB), which were only inputs for Earth Engine assets that are already uploaded: `python scripts/download_external_data.py` re-creates them;
 - the 250 m factor grid (`data/processed/factor_grid_points/`, 272 MB), an intermediate behind the scored map: `scripts/gee_sample_factor_grid_points.py` re-creates it, and it is only needed to re-run `predict_susceptibility_grid.py`;
@@ -88,7 +96,7 @@ Left out on purpose (the project is about 460 MB; everything below is regenerabl
 | 8 | `scripts/run_live_gfs_forecast.py` (Earth Engine, ~10 s; rerun for a fresh forecast) | `results/live_forecast/latest.json` |
 | 9 | `scripts/build_impact_overlay.py`, `scripts/make_figures.py` | `results/impact_overlay/`, `results/figures/` |
 
-Steps 3, 4, 6 and 8 need an Earth Engine service-account key at `scripts/service_account/key.json` (not included; Earth Engine project and quota are the author's). Everything else, including steps 5, 7 and 9, runs from the files in this folder.
+Steps 3, 4, 6 and 8 need an Earth Engine service-account key at `scripts/service_account/key.json` (not included; Earth Engine project and quota are the team's). Everything else, including steps 5, 7 and 9, runs from the files in this folder.
 
 ## Quick start
 
@@ -112,4 +120,4 @@ cd apps/frontend && npm install && npm run dev        # http://localhost:3000
 
 ## Data and licences
 
-Sources, citations and licences are in `docs/DATA_SOURCES.md`. OpenStreetMap-derived layers are © OpenStreetMap contributors (ODbL 1.0); GEM faults are CC BY-SA 4.0; WorldPop is CC BY 4.0; GLiM is free for non-commercial scientific use with citation.
+Data sources are summarised in `docs/METHODS.md` and `data/DATA_DICTIONARY.md`. OpenStreetMap-derived layers are © OpenStreetMap contributors (ODbL 1.0); GEM faults are CC BY-SA 4.0; WorldPop is CC BY 4.0; GLiM is free for non-commercial scientific use with citation.

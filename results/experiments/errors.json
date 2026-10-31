@@ -1,0 +1,269 @@
+{
+ "province": [
+  {
+   "province": "Chumphon",
+   "n_landslide": 0,
+   "miss_rate": 0.0,
+   "n_neg": 477,
+   "false_alarm_rate": 0.298
+  },
+  {
+   "province": "Krabi",
+   "n_landslide": 207,
+   "miss_rate": 0.005,
+   "n_neg": 320,
+   "false_alarm_rate": 0.05
+  },
+  {
+   "province": "Phangnga",
+   "n_landslide": 275,
+   "miss_rate": 0.007,
+   "n_neg": 222,
+   "false_alarm_rate": 0.464
+  },
+  {
+   "province": "Surat Thani",
+   "n_landslide": 641,
+   "miss_rate": 0.02,
+   "n_neg": 486,
+   "false_alarm_rate": 0.475
+  }
+ ],
+ "slope_band": [
+  {
+   "slope_band": "0-10",
+   "n_landslide": 20,
+   "miss_rate": 0.05,
+   "n_neg": 778,
+   "false_alarm_rate": 0.017
+  },
+  {
+   "slope_band": "10-20",
+   "n_landslide": 181,
+   "miss_rate": 0.061,
+   "n_neg": 290,
+   "false_alarm_rate": 0.348
+  },
+  {
+   "slope_band": "20-30",
+   "n_landslide": 390,
+   "miss_rate": 0.008,
+   "n_neg": 237,
+   "false_alarm_rate": 0.819
+  },
+  {
+   "slope_band": ">30",
+   "n_landslide": 532,
+   "miss_rate": 0.002,
+   "n_neg": 197,
+   "false_alarm_rate": 0.934
+  }
+ ],
+ "elev_band": [
+  {
+   "elev_band": "<100",
+   "n_landslide": 17,
+   "miss_rate": 0.176,
+   "n_neg": 778,
+   "false_alarm_rate": 0.039
+  },
+  {
+   "elev_band": "100-300",
+   "n_landslide": 372,
+   "miss_rate": 0.032,
+   "n_neg": 507,
+   "false_alarm_rate": 0.578
+  },
+  {
+   "elev_band": "300-600",
+   "n_landslide": 693,
+   "miss_rate": 0.001,
+   "n_neg": 187,
+   "false_alarm_rate": 0.765
+  },
+  {
+   "elev_band": ">600",
+   "n_landslide": 41,
+   "miss_rate": 0.0,
+   "n_neg": 33,
+   "false_alarm_rate": 0.788
+  }
+ ],
+ "road_band": [
+  {
+   "road_band": "<250 m",
+   "n_landslide": 272,
+   "miss_rate": 0.022,
+   "n_neg": 789,
+   "false_alarm_rate": 0.118
+  },
+  {
+   "road_band": "250-1000 m",
+   "n_landslide": 255,
+   "miss_rate": 0.024,
+   "n_neg": 438,
+   "false_alarm_rate": 0.443
+  },
+  {
+   "road_band": ">1 km",
+   "n_landslide": 596,
+   "miss_rate": 0.007,
+   "n_neg": 278,
+   "false_alarm_rate": 0.737
+  }
+ ],
+ "lithology": [
+  {
+   "lithology": "Acid plutonic rocks",
+   "n_landslide": 243,
+   "miss_rate": 0.0,
+   "n_neg": 83,
+   "false_alarm_rate": 0.0
+  },
+  {
+   "lithology": "Carbonate sedimentary rocks",
+   "n_landslide": 7,
+   "miss_rate": 0.0,
+   "n_neg": 331,
+   "false_alarm_rate": 0.347
+  },
+  {
+   "lithology": "Mixed sedimentary rocks",
+   "n_landslide": 805,
+   "miss_rate": 0.011,
+   "n_neg": 650,
+   "false_alarm_rate": 0.531
+  },
+  {
+   "lithology": "Unconsolidated sediments",
+   "n_landslide": 68,
+   "miss_rate": 0.103,
+   "n_neg": 438,
+   "false_alarm_rate": 0.073
+  }
+ ],
+ "lulc": [
+  {
+   "lulc": "barren",
+   "n_landslide": 0,
+   "miss_rate": 0.0,
+   "n_neg": 4,
+   "false_alarm_rate": 0.0
+  },
+  {
+   "lulc": "cropPlantation",
+   "n_landslide": 1,
+   "miss_rate": 0.0,
+   "n_neg": 42,
+   "false_alarm_rate": 0.024
+  },
+  {
+   "lulc": "cropland",
+   "n_landslide": 0,
+   "miss_rate": 0.0,
+   "n_neg": 27,
+   "false_alarm_rate": 0.037
+  },
+  {
+   "lulc": "deciduous",
+   "n_landslide": 37,
+   "miss_rate": 0.0,
+   "n_neg": 175,
+   "false_alarm_rate": 0.269
+  },
+  {
+   "lulc": "evergreen",
+   "n_landslide": 933,
+   "miss_rate": 0.006,
+   "n_neg": 409,
+   "false_alarm_rate": 0.758
+  },
+  {
+   "lulc": "floodedForest",
+   "n_landslide": 0,
+   "miss_rate": 0.0,
+   "n_neg": 1,
+   "false_alarm_rate": 0.0
+  },
+  {
+   "lulc": "grass",
+   "n_landslide": 2,
+   "miss_rate": 0.0,
+   "n_neg": 0,
+   "false_alarm_rate": 0.0
+  },
+  {
+   "lulc": "otherForest",
+   "n_landslide": 0,
+   "miss_rate": 0.0,
+   "n_neg": 1,
+   "false_alarm_rate": 0.0
+  },
+  {
+   "lulc": "palm",
+   "n_landslide": 1,
+   "miss_rate": 0.0,
+   "n_neg": 292,
+   "false_alarm_rate": 0.01
+  },
+  {
+   "lulc": "rice",
+   "n_landslide": 0,
+   "miss_rate": 0.0,
+   "n_neg": 15,
+   "false_alarm_rate": 0.0
+  },
+  {
+   "lulc": "rubber",
+   "n_landslide": 0,
+   "miss_rate": 0.0,
+   "n_neg": 27,
+   "false_alarm_rate": 0.148
+  },
+  {
+   "lulc": "shrub",
+   "n_landslide": 149,
+   "miss_rate": 0.067,
+   "n_neg": 496,
+   "false_alarm_rate": 0.254
+  },
+  {
+   "lulc": "urban",
+   "n_landslide": 0,
+   "miss_rate": 0.0,
+   "n_neg": 4,
+   "false_alarm_rate": 0.0
+  },
+  {
+   "lulc": "water",
+   "n_landslide": 0,
+   "miss_rate": 0.0,
+   "n_neg": 11,
+   "false_alarm_rate": 0.0
+  },
+  {
+   "lulc": "wetland",
+   "n_landslide": 0,
+   "miss_rate": 0.0,
+   "n_neg": 1,
+   "false_alarm_rate": 0.0
+  }
+ ],
+ "confusion": {
+  "detected": 1107,
+  "missed": 16,
+  "false_alarms": 492,
+  "correct_negatives": 1013
+ },
+ "ndvi_median": {
+  "landslides": 0.76267015914593,
+  "negatives": 0.8093555601495986,
+  "detected_test_landslides": 0.7649989620095495,
+  "missed_test_landslides": 0.8311446240287594
+ },
+ "decision": {
+  "top20": 0.9643811219946572,
+  "top10": 0.8601959038290294,
+  "n_test_landslides": 1123
+ }
+}

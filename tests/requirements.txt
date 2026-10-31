@@ -1,0 +1,8 @@
+# Dependencies for the data and modelling tests in tests/ (run in GitHub Actions).
+numpy>=1.26
+pandas>=2.1
+scipy>=1.11
+scikit-learn>=1.4
+pytest>=8
+# Offline tests of the Earth Engine extraction scripts (no credentials or network needed)
+earthengine-api>=1.0

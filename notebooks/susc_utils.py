@@ -1,6 +1,7 @@
 """Helpers imported by the notebook. Kept in a module so the saved joblib pipeline can be
 unpickled from any script that has this file on its path."""
 import numpy as np
+from sklearn.base import BaseEstimator, TransformerMixin
 
 
 def add_aspect_features(data):
@@ -10,9 +11,6 @@ def add_aspect_features(data):
     data['aspect_sin'] = np.sin(rad)
     data['aspect_cos'] = np.cos(rad)
     return data.drop(columns='aspect')
-
-
-from sklearn.base import BaseEstimator, TransformerMixin
 
 
 class IQRClipper(BaseEstimator, TransformerMixin):

@@ -3,7 +3,8 @@
 Two apps, both read-only against the data pipeline's outputs
 (`data/`, `models/`, `results/` at the project root). Neither writes
 into that pipeline -- rerun the relevant script/notebook to refresh data,
-then restart the backend (it caches pipeline outputs in memory at startup).
+then restart the backend (it caches most pipeline outputs in memory on first
+use; the live forecast and impact overlay files are re-read on each request).
 
 ## Backend (`apps/backend`) -- FastAPI
 
@@ -27,8 +28,8 @@ Docs/try-it-out UI: http://localhost:8000/docs
 | `GET /api/impact/susceptibility-grid/metadata` | Class-bin counts, score interpretation, limitations for the grid above |
 | `GET /api/impact/facilities` | Critical-facility points (hospitals, schools, emergency services, transport hubs, places of worship) |
 | `GET /api/impact/buildings?min_lon=&min_lat=&max_lon=&max_lat=&limit=` | Building footprints for a bounding box (viewport-limited -- 426k+ total, never served unfiltered) |
-| `GET /api/impact/live-forecast` | NOAA GFS 24/48/72 h rainfall per tambon and its (assumed-threshold) rain class (from `scripts/run_live_gfs_forecast.py`) |
-| `GET /api/impact/scenario?rain_24h_mm=&province=&limit=` | What-if: replaces the 24 h rainfall in scope (all tambons or one province) and re-applies the impact rule to the stored overlay; in-memory, no Earth Engine, no AI assistant (see `apps/backend/app/scenario.py`) |
+| `GET /api/impact/live-forecast` | NOAA GFS 24/48/72 h rainfall per tambon and its rain class (against local percentiles; fixed thresholds kept for reference) (from `scripts/run_live_gfs_forecast.py`) |
+| `GET /api/impact/scenario?rain_24h_mm=&province=&limit=` | What-if: replaces the 24 h rainfall in scope (all tambons or one province) and re-applies the impact rule to the stored overlay; in-memory, no Earth Engine, no extra model (see `apps/backend/app/scenario.py`) |
 | `GET /api/impact/overlay` | Live impact per tambon/province: terrain tier x GFS rain class x exposed buildings/facilities/population (from `scripts/build_impact_overlay.py`) |
 | `GET /api/impact/population` | WorldPop population stats for the study area (raster itself not tiled/served yet) |
 
@@ -44,8 +45,9 @@ http://localhost:3000, configured via `.env.local` (`NEXT_PUBLIC_API_URL`, defau
 
 | Page | Contents |
 | --- | --- |
-| `/` Overview | Stat cards, live pipeline-job progress, links to the other two pages |
+| `/` Overview | Stat cards, live pipeline-job progress, links to the other pages |
 | `/impact` Live Impact | MapLibre map: study-area boundary, the 250m susceptibility map, critical facilities, buildings (all loaded per-viewport), plus the raw training/test sample points as a toggle |
+| `/warning` Early Warning | GFS 24/48/72 h forecast rainfall and live impact class per tambon, exposure at elevated risk, and the what-if rainfall scenario panel |
 | `/model` Model | Methodology write-up, best-model/threshold cards, full CV-vs-test model comparison table |
 
 ## Data pipeline recap
@@ -57,7 +59,7 @@ http://localhost:3000, configured via `.env.local` (`NEXT_PUBLIC_API_URL`, defau
   it was ~10-60x slower and hit an undocumented Earth Engine 5,000-element
   cap on large point counts (fixed in the point-sampling script by chunking).
   See that script's docstring for why 250m is not a meaningful resolution
-  loss given the model's own ~28km spatial-CV validation granularity.
+  loss given the model's own 0.5° (~55 km) spatial-CV blocks.
 - **Susceptibility map**: `scripts/predict_susceptibility_grid.py` applies
   the trained pipeline + isotonic calibrator to that grid, producing
   `results/susceptibility_map/susceptibility_grid_points.csv` (served by the
