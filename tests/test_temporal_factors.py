@@ -4,9 +4,15 @@ from pathlib import Path
 
 SCRIPTS = Path(__file__).resolve().parent.parent / "scripts"  # pipeline modules live in scripts/
 if not (SCRIPTS / "gee_landslide_factors.py").exists():
-    # The Earth Engine extraction scripts are private and not part of the public repository.
-    raise unittest.SkipTest("private pipeline scripts are not available in this checkout")
+    raise unittest.SkipTest("pipeline scripts are not available in this checkout")
 sys.path.insert(0, str(SCRIPTS))
+
+DATA = SCRIPTS.parent / "data"
+# The raw inventory and province boundary are not in the public repository; tests that read them run locally only.
+needs_inventory = unittest.skipUnless((DATA / "inventory" / "landslide_inventory.geojson").exists(),
+                                      "raw landslide inventory is not in this checkout")
+needs_boundary = unittest.skipUnless((DATA / "boundary" / "southern_thailand.geojson").exists(),
+                                     "study-area boundary is not in this checkout")
 """Offline regression checks; no authentication, downloads, or exports."""
 import csv
 from datetime import datetime
@@ -32,6 +38,7 @@ class DateTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 factors.normalize_event_date({'date_parsed': value})
 
+    @needs_inventory
     def test_current_inventory_dates_are_parseable_and_after_srtm(self):
         features = json.loads(factors.landslide_events_path.read_text())['features']
         for feature in features:
@@ -91,6 +98,7 @@ class DateTests(unittest.TestCase):
         self.assertEqual(factors.SERVIR_CLASSES[17],'water')
 
 
+@needs_boundary
 class GraphTests(ApiTestCase):
     def test_dated_source_profiles(self):
         # A single chunk per event group (landslide, non-landslide) restores
