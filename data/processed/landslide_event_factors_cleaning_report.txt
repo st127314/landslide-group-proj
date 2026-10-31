@@ -1,0 +1,71 @@
+landslide_event_factors column-only cleaning report (paired-negatives rebuild)
+===============================================================================
+
+Source: data/processed/landslide_event_factors.csv
+Output: data/processed/landslide_event_factors_cleaned.csv
+Original shape: 12360 rows x 56 columns
+Final shape: 12360 rows x 25 columns
+Rows removed: 0
+
+Rebuild: the 6,180 landslide rows are unchanged; the 6,180 negatives are the paired ring sample
+(scripts/generate_paired_negatives.py, same date and province as their landslide, >= 2 km from all
+23,284 landslide records). Factors were re-extracted for the negatives only.
+
+Columns kept: id, event_date, longitude, latitude, landslide + the model factors; index names lower-cased;
+numeric lithology / land-cover codes replaced by class names (`lithology`, `lulc`); id = Event_ID for
+negatives, LS_<inventory_id> for landslides.
+
+Additionally removed from the model table: dist_to_stream (HydroSHEDS-branch values are on the wrong
+scale for every pre-2020 event; see docs/METHODS.md, Known issue 1).
+
+Removed provenance/diagnostic columns (still in the raw table):
+- Event_ID
+- DATE
+- date_parsed
+- event_cutoff
+- inventory_id
+- date
+- dist_to_stream
+- drainage_density
+- dist_to_fault
+- dem_source
+- ndvi_observation_ms
+- ndvi_observation_date
+- ndvi_sensor
+- ndvi_age_days
+- ndvi_valid_observations
+- ndvi_status
+- LULC_SERVIR
+- land_cover_year
+- land_cover_status
+- temporal_policy
+- land_cover_class_key
+- land_cover_source
+- land_cover_resolution_m
+- land_cover_observation_ms
+- ndvi_resolution_m
+- hydrology_reference
+- hydrology_resolution_m
+- terrain_reference
+- soil_temporal_status
+- roads_rivers_temporal_status
+
+Missing values retained in cleaned file:
+- ndvi: 446
+- soil_texture: 132
+- soil_clay_pct: 132
+- soil_sand_pct: 132
+- soil_bulk_density: 132
+- lithology: 46
+- slope: 17
+- aspect: 17
+- ls_factor: 17
+- twi: 17
+- spi: 17
+- lulc: 10
+- upstream_area_km2: 5
+
+Class balance:
+- 0: 6180
+- 1: 6180
+Unique id count: 12360

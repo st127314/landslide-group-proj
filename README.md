@@ -8,6 +8,23 @@ A landslide susceptibility model plus a live-impact view for the 14 southern pro
 
 Read `docs/METHODS.md` first for how everything was built and, importantly, its **Known issues** section before relying on any number here.
 
+## What is in this repository
+
+The repository holds what a team member needs to run and extend the modelling notebooks:
+
+| Path | Contents |
+|---|---|
+| `notebooks/` | susceptibility modelling and rainfall-trigger notebooks, plus `susc_utils.py` |
+| `data/processed/landslide_event_factors_cleaned.csv` | model-ready table: 6,180 landslide + 6,180 paired non-landslide points, 20 conditioning factors (input of the susceptibility notebook) |
+| `data/processed/*_antecedent_rainfall.csv` | IMERG antecedent rainfall per event (input of the rainfall-trigger notebook) |
+| `data/processed/landslide_event_factors_cleaning_report.txt`, `data/DATA_DICTIONARY.md` | how the table was cleaned; meaning of every column |
+| `docs/` | methods, data sources, dataset descriptions, proposal report and slides |
+| `apps/`, `tests/`, `.github/` | API, dashboard, tests and CI/CD |
+
+**Kept outside git on purpose:** the raw landslide inventory and source spreadsheets, the raw Earth Engine samples, external layers (OSM, WorldPop, GLiM, GEM, GADM boundaries), the 250 m factor grid, trained models, results and credentials. GADM boundaries may not be redistributed, and the large layers exceed GitHub's file limits. Clone the repo, install `requirements.txt` (or `notebooks/requirements-modeling.txt`) and run the notebooks from the project root; they write models to `models/`, which stays local.
+
+The landslide inventory was provided by ADPC; cite it accordingly when reusing the processed tables.
+
 ## Headline results
 
 | | |

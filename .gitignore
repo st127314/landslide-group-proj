@@ -1,4 +1,5 @@
-# PUBLIC repo = apps/, notebooks/, tests/ (+ README.md). Everything else is private and stays local.
+# PUBLIC repo = apps/, notebooks/, tests/, docs/, final model-ready tables in data/processed/ (+ README.md).
+# Raw data (inventory, Earth Engine samples, external layers), models, results and credentials stay local.
 # Whitelist approach: ignore everything at the top level, then re-include only the public parts.
 /*
 !/.gitignore
@@ -8,6 +9,20 @@
 !/apps/
 !/notebooks/
 !/tests/
+
+# Final, model-ready datasets and project documents (shared with the team)
+!/data/
+/data/*
+!/data/DATA_DICTIONARY.md
+!/data/processed/
+/data/processed/*
+!/data/processed/landslide_event_factors_cleaned.csv
+!/data/processed/landslide_event_antecedent_rainfall.csv
+!/data/processed/non_landslide_event_antecedent_rainfall.csv
+!/data/processed/landslide_event_factors_cleaning_report.txt
+!/docs/
+/docs/inventory_date_audit.csv
+/docs/~$*
 
 # Never track these, even inside the public folders
 node_modules/
