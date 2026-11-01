@@ -70,7 +70,7 @@ On the server (`/opt/landslide`): `project/{data,models,results}` (private data,
    gh secret set EC2_HOST --body <server-ip> -R $R
    gh secret set EC2_USER --body ubuntu -R $R
    gh secret set EC2_SSH_KEY -R $R < ml.pem
-   gh secret set EC2_KNOWN_HOSTS -R $R < ../group_proj_archive/credentials/ec2_known_hosts.txt   # pins the server host keys
+   gh secret set EC2_KNOWN_HOSTS -R $R < credentials/ec2_known_hosts.txt   # pins the server host keys
    gh variable set DEPLOY_ENABLED --body true -R $R                                               # last: switches deploy on
    ```
    Safer than uploading `ml.pem`: create a deploy-only key (`ssh-keygen -t ed25519 -f deploy_key`), append

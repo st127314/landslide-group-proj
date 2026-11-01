@@ -68,6 +68,7 @@ apps/frontend/AGENTS.md
 *.geojson
 *.zip
 service_account/
+credentials/
 key.json
 *privatekey*.json
 *.pem
