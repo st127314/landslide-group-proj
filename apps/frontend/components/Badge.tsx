@@ -27,11 +27,11 @@ export const CLASS_LABELS: Record<string, string> = {
 export function Badge({ cls }: { cls: string }) {
   return (
     <span
-      className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-        CLASS_COLORS[cls] ?? "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+      className={`inline-flex whitespace-nowrap rounded-md px-2 py-0.5 text-xs font-medium ${
+        CLASS_COLORS[cls] ?? "bg-surface-2 text-muted"
       }`}
     >
-      {CLASS_LABELS[cls] ?? cls.replace("_", " ")}
+      {CLASS_LABELS[cls] ?? cls.replaceAll("_", " ")}
     </span>
   );
 }

@@ -30,27 +30,27 @@ export default function ModelTable({
   bestModel: string;
 }) {
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full min-w-[720px] border-collapse text-sm">
+    <div className="overflow-x-auto rounded-lg border border-line">
+      <table className="data-table min-w-[720px]">
         <thead>
-          <tr className="border-b border-zinc-200 text-left text-zinc-500 dark:border-zinc-800">
-            <th className="py-2 pr-4 font-medium">Model</th>
-            <th className="py-2 pr-2 font-medium" colSpan={CV_METRICS.length}>
+          <tr>
+            <th className="font-medium">Model</th>
+            <th className="font-medium" colSpan={CV_METRICS.length}>
               Nested spatial CV (model selection)
             </th>
-            <th className="py-2 pr-2 font-medium" colSpan={TEST_METRICS.length}>
+            <th className="font-medium" colSpan={TEST_METRICS.length}>
               Held-out test (single evaluation)
             </th>
           </tr>
-          <tr className="border-b border-zinc-200 text-left text-xs text-zinc-400 dark:border-zinc-800">
+          <tr>
             <th />
             {CV_METRICS.map(([, label]) => (
-              <th key={label} className="py-1 pr-3 font-normal">
+              <th key={label} className="font-normal normal-case tracking-normal">
                 {label}
               </th>
             ))}
             {TEST_METRICS.map(([, label]) => (
-              <th key={label} className="py-1 pr-3 font-normal">
+              <th key={label} className="font-normal normal-case tracking-normal">
                 {label}
               </th>
             ))}
@@ -62,25 +62,25 @@ export default function ModelTable({
             return (
               <tr
                 key={row.model}
-                className={`border-b border-zinc-100 dark:border-zinc-900 ${
-                  isBest ? "bg-amber-50 dark:bg-amber-950/30" : ""
+                className={`${
+                  isBest ? "bg-accent-soft" : ""
                 }`}
               >
-                <td className="py-2 pr-4 font-medium">
+                <td className="font-medium">
                   {row.model}
                   {isBest && (
-                    <span className="ml-2 rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-semibold text-white">
+                    <span className="ml-2 rounded-full bg-accent px-2 py-0.5 text-[10px] font-semibold text-accent-fg">
                       BEST
                     </span>
                   )}
                 </td>
                 {CV_METRICS.map(([key, label]) => (
-                  <td key={label} className="py-2 pr-3 tabular-nums">
+                  <td key={label} className="tabular-nums">
                     {fmt(row.cv?.[key])}
                   </td>
                 ))}
                 {TEST_METRICS.map(([key, label]) => (
-                  <td key={label} className="py-2 pr-3 tabular-nums">
+                  <td key={label} className="tabular-nums">
                     {fmt(row.test?.[key])}
                   </td>
                 ))}

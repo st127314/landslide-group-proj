@@ -16,20 +16,20 @@ function Row({ job }: { job: JobStatus }) {
         <div className="flex items-center justify-between gap-2">
           <span className="text-sm font-medium">{job.label}</span>
           {pct !== null && (
-            <span className="text-xs tabular-nums text-zinc-500">
+            <span className="text-xs tabular-nums text-muted">
               {job.complete}/{job.total} ({pct}%)
             </span>
           )}
         </div>
         {pct !== null && (
-          <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800">
+          <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-surface-2">
             <div
-              className="h-full rounded-full bg-amber-500 transition-all"
+              className={`h-full rounded-full transition-all ${job.done ? "bg-emerald-500" : "bg-amber-500"}`}
               style={{ width: `${pct}%` }}
             />
           </div>
         )}
-        {job.note && <p className="mt-1 text-xs text-zinc-500">{job.note}</p>}
+        {job.note && <p className="mt-1 text-xs text-muted">{job.note}</p>}
       </div>
     </li>
   );
@@ -43,7 +43,7 @@ export default function PipelineStatusList({ status }: { status: PipelineStatus 
     status.impact_overlay,
   ];
   return (
-    <ul className="divide-y divide-zinc-200 dark:divide-zinc-800">
+    <ul className="divide-y divide-line">
       {jobs.map((job) => (
         <Row key={job.label} job={job} />
       ))}

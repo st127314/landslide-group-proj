@@ -8,7 +8,7 @@ import dynamic from "next/dynamic";
 const ImpactMap = dynamic(() => import("@/components/ImpactMap"), {
   ssr: false,
   loading: () => (
-    <div className="flex h-full w-full items-center justify-center text-sm text-zinc-500">
+    <div className="flex h-full w-full items-center justify-center bg-surface-2 text-sm text-muted">
       Loading map…
     </div>
   ),

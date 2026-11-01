@@ -1,5 +1,6 @@
 import { api } from "@/lib/api";
 import ModelTable from "@/components/ModelTable";
+import Page from "@/components/Page";
 
 export default async function ModelPage() {
   let metadata: Awaited<ReturnType<typeof api.model>> | null = null;
@@ -12,19 +13,21 @@ export default async function ModelPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-6xl flex-1 px-6 py-10">
-      <h1 className="text-3xl font-bold tracking-tight">Susceptibility Model</h1>
+    <Page
+      title="Susceptibility model"
+      description="How the terrain susceptibility map was trained, validated and calibrated, with every candidate model's scores."
+    >
 
       {error && (
-        <div className="mt-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300">
+        <div className="mt-6 note-danger">
           Could not reach the API: {error}. Run the modeling notebook first if{" "}
           <code>models/susceptibility/model_metadata.json</code> doesn&apos;t exist yet.
         </div>
       )}
 
-      <section className="mt-6 rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
-        <h2 className="text-lg font-semibold">Methodology</h2>
-        <div className="mt-3 space-y-2 text-sm text-zinc-600 dark:text-zinc-400">
+      <section className="card">
+        <h2 className="card-title">Methodology</h2>
+        <div className="mt-3 space-y-2 text-sm text-muted">
           <p>
             Eleven models (Logistic Regression with/without feature selection, Decision Tree,
             Random Forest, SVM-RBF, Gradient Boosting, AdaBoost, KNN, Naive Bayes, XGBoost,
@@ -33,9 +36,9 @@ export default async function ModelPage() {
             point inventory.
           </p>
           <p>
-            Splits are grouped by ~0.25° spatial blocks (<code>StratifiedGroupKFold</code>),
-            not plain random splits, so neighbouring/spatially-autocorrelated points never
-            leak between train and test. Model selection and the decision threshold
+            Splits are grouped by 0.5° spatial blocks (<code>StratifiedGroupKFold</code>), with a
+            5 km embargo around the held-out fold, not plain random splits, so neighbouring,
+            spatially autocorrelated points never leak between train and test. Model selection and the decision threshold
             (Youden&apos;s J) come from nested cross-validation&apos;s out-of-fold
             predictions only; the held-out test set is scored once, after selection.
           </p>
@@ -47,7 +50,7 @@ export default async function ModelPage() {
             predictions) and checked against a temporal (pre/post date) holdout in
             addition to the spatial one.
           </p>
-          <p className="text-amber-700 dark:text-amber-400">
+          <p className="text-[color:var(--warn-fg)]">
             Caveat: the 1:1 sample is not the real-world landslide prevalence, so
             precision/PR-AUC/F1 here are optimistic for real deployment; ROC-AUC and the
             relative ranking across models are more robust to that.
@@ -57,27 +60,27 @@ export default async function ModelPage() {
 
       {metadata && (
         <section className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
-            <div className="text-xs text-zinc-500">Selected model</div>
-            <div className="mt-1 text-lg font-semibold">{metadata.best_model}</div>
-            <div className="text-xs text-zinc-500">{metadata.selection}</div>
+          <div className="card p-4">
+            <div className="eyebrow">Selected model</div>
+            <div className="mt-2 text-xl font-semibold tabular-nums">{metadata.best_model}</div>
+            <div className="text-xs text-muted">{metadata.selection}</div>
           </div>
-          <div className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
-            <div className="text-xs text-zinc-500">Decision threshold (raw prob.)</div>
-            <div className="mt-1 text-lg font-semibold">
+          <div className="card p-4">
+            <div className="eyebrow">Threshold (raw)</div>
+            <div className="mt-2 text-xl font-semibold tabular-nums">
               {metadata.threshold_raw_probability.toFixed(3)}
             </div>
           </div>
-          <div className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
-            <div className="text-xs text-zinc-500">Decision threshold (calibrated)</div>
-            <div className="mt-1 text-lg font-semibold">
+          <div className="card p-4">
+            <div className="eyebrow">Threshold (calibrated)</div>
+            <div className="mt-2 text-xl font-semibold tabular-nums">
               {metadata.threshold_calibrated_probability.toFixed(3)}
             </div>
           </div>
-          <div className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
-            <div className="text-xs text-zinc-500">Features used</div>
-            <div className="mt-1 text-lg font-semibold">{metadata.feature_columns.length}</div>
-            <div className="text-xs text-zinc-500">
+          <div className="card p-4">
+            <div className="eyebrow">Features used</div>
+            <div className="mt-2 text-xl font-semibold tabular-nums">{metadata.feature_columns.length}</div>
+            <div className="text-xs text-muted">
               {metadata.numeric_features.length} numeric, {metadata.categorical_features.length}{" "}
               categorical
             </div>
@@ -86,9 +89,9 @@ export default async function ModelPage() {
       )}
 
       {comparison && (
-        <section className="mt-6 rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
-          <h2 className="text-lg font-semibold">Model comparison</h2>
-          <p className="mt-1 text-sm text-zinc-500">
+        <section className="mt-6 card">
+          <h2 className="card-title">Model comparison</h2>
+          <p className="card-desc">
             Nested spatial cross-validation drives model selection; the held-out columns are a
             single, after-the-fact check, not used to pick the model.
           </p>
@@ -99,30 +102,30 @@ export default async function ModelPage() {
       )}
 
       {metadata && (
-        <section className="mt-6 rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
-          <h2 className="text-lg font-semibold">Excluded / feature columns</h2>
+        <section className="mt-6 card">
+          <h2 className="card-title">Excluded / feature columns</h2>
           <div className="mt-3 grid gap-4 text-sm sm:grid-cols-3">
             <div>
-              <div className="mb-1 font-medium text-zinc-500">Numeric</div>
-              <div className="text-zinc-700 dark:text-zinc-300">
+              <div className="mb-1 font-medium text-muted">Numeric</div>
+              <div className="text-fg">
                 {metadata.numeric_features.join(", ")}
               </div>
             </div>
             <div>
-              <div className="mb-1 font-medium text-zinc-500">Categorical</div>
-              <div className="text-zinc-700 dark:text-zinc-300">
+              <div className="mb-1 font-medium text-muted">Categorical</div>
+              <div className="text-fg">
                 {metadata.categorical_features.join(", ")}
               </div>
             </div>
             <div>
-              <div className="mb-1 font-medium text-zinc-500">Excluded (ids/coords/target)</div>
-              <div className="text-zinc-700 dark:text-zinc-300">
+              <div className="mb-1 font-medium text-muted">Excluded (ids/coords/target)</div>
+              <div className="text-fg">
                 {metadata.excluded_columns.join(", ")}
               </div>
             </div>
           </div>
         </section>
       )}
-    </div>
+    </Page>
   );
 }

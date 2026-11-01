@@ -6,8 +6,14 @@ import type { Map as MapLibreMap } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { api } from "@/lib/api";
 
-// OpenStreetMap standard tiles: no API key, attribution required. Fine for a low-traffic project site under the
-// OSM tile usage policy; a heavily used deployment should move to a commercial or self-hosted tile service.
+// Served from public/ (copied there by scripts/copy-maplibre-worker.mjs): the bundle does not ship the worker.
+maplibregl.setWorkerUrl("/maplibre-gl-worker.mjs");
+
+const OSM_ATTRIBUTION = '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+
+// OpenStreetMap standard tiles: no API key, attribution required, fine for a low-traffic project site under the OSM
+// tile usage policy. In the dark theme the same tiles are drawn with inverted brightness (see DARK_BASEMAP), so no
+// second tile service is needed.
 const BASE_STYLE: maplibregl.StyleSpecification = {
   version: 8,
   sources: {
@@ -16,14 +22,15 @@ const BASE_STYLE: maplibregl.StyleSpecification = {
       tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
       tileSize: 256,
       maxzoom: 19,
-      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      attribution: OSM_ATTRIBUTION,
     },
   },
-  layers: [{ id: "osm", type: "raster", source: "osm" }],
+  layers: [{ id: "basemap", type: "raster", source: "osm" }],
 };
 
-// Served from public/ (copied there by scripts/copy-maplibre-worker.mjs): the bundle does not ship the worker.
-maplibregl.setWorkerUrl("/maplibre-gl-worker.mjs");
+// Swapping min/max brightness inverts the tiles; hue-rotate 180 puts water back to blue and land to grey.
+const LIGHT_BASEMAP = { "raster-brightness-min": 0, "raster-brightness-max": 1, "raster-saturation": 0, "raster-hue-rotate": 0, "raster-contrast": 0 };
+const DARK_BASEMAP = { "raster-brightness-min": 0.92, "raster-brightness-max": 0.08, "raster-saturation": -0.55, "raster-hue-rotate": 180, "raster-contrast": 0.1 };
 
 const STUDY_AREA_CENTER: [number, number] = [100.0, 8.2];
 const STUDY_AREA_ZOOM = 6.3;
@@ -39,33 +46,16 @@ const SUSCEPTIBILITY_CLASSES: Array<{ label: string; range: string; color: strin
 ];
 const CLASS_EDGES = [0.2, 0.4, 0.6, 0.8];
 
-const FACILITY_CATEGORY_COLORS: Record<string, string> = {
-  hospital: "#dc2626",
-  clinic: "#dc2626",
-  doctors: "#dc2626",
-  dentist: "#dc2626",
-  pharmacy: "#f97316",
-  nursing_home: "#f97316",
-  veterinary: "#f97316",
-  school: "#2563eb",
-  college: "#2563eb",
-  university: "#2563eb",
-  kindergarten: "#2563eb",
-  fire_station: "#b91c1c",
-  police: "#1d4ed8",
-  townhall: "#7c3aed",
-  community_centre: "#7c3aed",
-  courthouse: "#7c3aed",
-  embassy: "#7c3aed",
-  post_office: "#7c3aed",
-  railway_station: "#059669",
-  railway_halt: "#059669",
-  bus_station: "#059669",
-  airport: "#059669",
-  airfield: "#059669",
-  ferry_terminal: "#059669",
-};
-const DEFAULT_FACILITY_COLOR = "#78716c"; // places of worship + anything else
+// Facility groups, coloured away from the blue susceptibility ramp so the points stay readable on top of it.
+const FACILITY_GROUPS: Array<{ label: string; color: string; classes: string[] }> = [
+  { label: "Health", color: "#dc2626", classes: ["hospital", "clinic", "doctors", "dentist", "pharmacy", "nursing_home", "veterinary"] },
+  { label: "Education", color: "#d97706", classes: ["school", "college", "university", "kindergarten"] },
+  { label: "Emergency", color: "#db2777", classes: ["fire_station", "police"] },
+  { label: "Civic", color: "#7c3aed", classes: ["townhall", "community_centre", "courthouse", "embassy", "post_office"] },
+  { label: "Transport", color: "#059669", classes: ["railway_station", "railway_halt", "bus_station", "airport", "airfield", "ferry_terminal"] },
+];
+const OTHER_FACILITY = { label: "Other", color: "#78716c" };
+const BUILDING_COLOR = "#9333ea";
 
 interface Layers {
   boundary: boolean;
@@ -73,6 +63,52 @@ interface Layers {
   susceptibility: boolean;
   facilities: boolean;
   buildings: boolean;
+}
+
+const LAYER_ROWS: Array<{ key: keyof Layers; label: string; hint?: string }> = [
+  { key: "susceptibilityGrid", label: "Susceptibility map", hint: "250 m grid, calibrated score" },
+  { key: "facilities", label: "Critical facilities", hint: "OSM, 3,895 points" },
+  { key: "buildings", label: "Buildings", hint: "Loaded for the current view" },
+  { key: "susceptibility", label: "Training / test samples", hint: "Held-out score per point" },
+  { key: "boundary", label: "Province boundaries" },
+];
+
+const VECTOR_LAYERS = ["susceptibility-points", "facilities-points", "buildings-fill"];
+
+interface Selection {
+  title: string;
+  rows: Array<[string, string]>;
+}
+
+const FIELD_LABELS: Record<string, string> = {
+  calibrated_probability: "Calibrated score",
+  susceptibility_class: "Class",
+  heldout_score: "Held-out score",
+  relative_score_class: "Score class",
+  event_date: "Event date",
+  landslide: "Label",
+  split: "Split",
+  fclass: "Type",
+  name: "Name",
+  osm_id: "OSM id",
+  id: "Id",
+  lon: "Longitude",
+  lat: "Latitude",
+};
+
+function formatValue(key: string, value: unknown): string {
+  if (value === null || value === undefined || value === "") return "—";
+  if (key === "landslide") return Number(value) === 1 ? "Landslide" : "Non-landslide";
+  if (typeof value === "number") return Number.isInteger(value) ? value.toLocaleString() : value.toFixed(key === "lon" || key === "lat" ? 4 : 3);
+  return String(value).replace(/_/g, " ");
+}
+
+function toRows(props: Record<string, unknown>): Array<[string, string]> {
+  return Object.entries(props).map(([k, v]) => [FIELD_LABELS[k] ?? k.replace(/_/g, " "), formatValue(k, v)]);
+}
+
+function isDark() {
+  return document.documentElement.classList.contains("dark");
 }
 
 export default function ImpactMap() {
@@ -85,9 +121,12 @@ export default function ImpactMap() {
     facilities: true,
     buildings: true,
   });
+  const [panelOpen, setPanelOpen] = useState(true);
+  const [legendOpen, setLegendOpen] = useState(true);
   const [buildingsTruncated, setBuildingsTruncated] = useState(false);
   const [buildingsCount, setBuildingsCount] = useState(0);
-  const [selected, setSelected] = useState<Record<string, unknown> | null>(null);
+  const [rasterAvailable, setRasterAvailable] = useState(true);
+  const [selected, setSelected] = useState<Selection | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const refreshBuildings = useCallback(async () => {
@@ -105,7 +144,7 @@ export default function ImpactMap() {
       setBuildingsTruncated(data.truncated);
       setBuildingsCount(data.features.length);
     } catch {
-      // Viewport too large / API unreachable -- leave the last good data in place.
+      // Buildings not deployed (small server) / API unreachable -- leave the last good data in place.
     }
   }, []);
 
@@ -117,13 +156,25 @@ export default function ImpactMap() {
       style: BASE_STYLE,
       center: STUDY_AREA_CENTER,
       zoom: STUDY_AREA_ZOOM,
+      attributionControl: { compact: true },
     });
     mapRef.current = map;
-    map.addControl(new maplibregl.NavigationControl(), "top-right");
+    map.addControl(new maplibregl.NavigationControl({ visualizePitch: false }), "top-right");
+    map.addControl(new maplibregl.ScaleControl({ maxWidth: 120 }), "bottom-left");
+
+    // Swap the basemap with the page theme.
+    const syncBasemap = () => {
+      if (!map.getLayer("basemap")) return;
+      for (const [prop, value] of Object.entries(isDark() ? DARK_BASEMAP : LIGHT_BASEMAP)) {
+        map.setPaintProperty("basemap", prop as "raster-saturation", value);
+      }
+    };
+    const themeObserver = new MutationObserver(syncBasemap);
+    themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
 
     map.on("load", async () => {
+      syncBasemap();
       try {
-        // The training/test samples (~2.7 MB) are off by default, so they are fetched only when switched on.
         const [boundary, facilities, raster] = await Promise.all([
           api.boundary(),
           api.facilities(),
@@ -136,7 +187,7 @@ export default function ImpactMap() {
           id: "boundary-line",
           type: "line",
           source: "boundary",
-          paint: { "line-color": "#18181b", "line-width": 1.5 },
+          paint: { "line-color": "#334155", "line-width": ["interpolate", ["linear"], ["zoom"], 6, 0.8, 10, 1.6], "line-opacity": 0.8 },
         });
 
         // The 250 m map is one pre-coloured PNG (scripts/make_susceptibility_png.py), drawn under the boundary.
@@ -153,10 +204,12 @@ export default function ImpactMap() {
               id: "susceptibility-raster",
               type: "raster",
               source: "susceptibility-raster",
-              paint: { "raster-opacity": 0.75, "raster-resampling": "nearest", "raster-fade-duration": 0 },
+              paint: { "raster-opacity": 0.8, "raster-resampling": "nearest", "raster-fade-duration": 0 },
             },
             "boundary-line"
           );
+        } else {
+          setRasterAvailable(false);
         }
 
         map.addSource("susceptibility", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
@@ -166,7 +219,7 @@ export default function ImpactMap() {
           source: "susceptibility",
           layout: { visibility: "none" },
           paint: {
-            "circle-radius": 3.5,
+            "circle-radius": ["interpolate", ["linear"], ["zoom"], 6, 2.5, 12, 6],
             "circle-color": [
               "case",
               ["==", ["get", "heldout_score"], null],
@@ -180,8 +233,8 @@ export default function ImpactMap() {
                 ...CLASS_EDGES.flatMap((edge, i) => [edge, SUSCEPTIBILITY_CLASSES[i + 1].color]),
               ],
             ],
-            "circle-opacity": 0.75,
-            "circle-stroke-width": 0,
+            "circle-stroke-width": 0.75,
+            "circle-stroke-color": "#ffffff",
           },
         });
 
@@ -191,7 +244,7 @@ export default function ImpactMap() {
             id: "buildings-fill",
             type: "fill",
             source: "buildings",
-            paint: { "fill-color": "#9333ea", "fill-opacity": 0.45 },
+            paint: { "fill-color": BUILDING_COLOR, "fill-opacity": 0.55 },
           },
           "susceptibility-points"
         );
@@ -203,48 +256,47 @@ export default function ImpactMap() {
         const colorExpr = [
           "match",
           ["get", "fclass"],
-          ...Object.entries(FACILITY_CATEGORY_COLORS).flat(),
-          DEFAULT_FACILITY_COLOR,
+          ...FACILITY_GROUPS.flatMap((g) => [g.classes, g.color]),
+          OTHER_FACILITY.color,
         ] as unknown as maplibregl.ExpressionSpecification;
         map.addLayer({
           id: "facilities-points",
           type: "circle",
           source: "facilities",
           paint: {
-            "circle-radius": 4.5,
+            "circle-radius": ["interpolate", ["linear"], ["zoom"], 6, 2.2, 10, 4.5, 14, 7],
             "circle-color": colorExpr,
-            "circle-stroke-width": 1,
+            "circle-stroke-width": ["interpolate", ["linear"], ["zoom"], 6, 0.5, 12, 1.25],
             "circle-stroke-color": "#ffffff",
           },
         });
 
-        // A raster has no features to click, so a click that misses every vector layer asks the API for the
-        // score of the nearest grid cell.
-        const vectorLayers = ["susceptibility-points", "facilities-points", "buildings-fill"];
-        map.on("click", async (e) => {
-          if (!map.getLayer("susceptibility-raster")) return;
-          if (map.getLayoutProperty("susceptibility-raster", "visibility") === "none") return;
-          if (map.queryRenderedFeatures(e.point, { layers: vectorLayers }).length) return;
-          try {
-            const cell = await api.susceptibilityAt(+e.lngLat.lng.toFixed(5), +e.lngLat.lat.toFixed(5));
-            setSelected({ layer: "Susceptibility map (250m grid)", ...cell });
-          } catch {
-            // Outside the study area.
-          }
-        });
         map.on("click", "susceptibility-points", (e) => {
           const f = e.features?.[0];
-          if (f) setSelected({ layer: "Susceptibility sample", ...f.properties });
+          if (f) setSelected({ title: "Training / test sample", rows: toRows(f.properties) });
         });
         map.on("click", "facilities-points", (e) => {
           const f = e.features?.[0];
-          if (f) setSelected({ layer: "Facility", ...f.properties });
+          if (f) setSelected({ title: "Critical facility", rows: toRows(f.properties) });
         });
         map.on("click", "buildings-fill", (e) => {
           const f = e.features?.[0];
-          if (f) setSelected({ layer: "Building", ...f.properties });
+          if (f) setSelected({ title: "Building", rows: toRows(f.properties) });
         });
-        for (const id of vectorLayers) {
+        // A raster has no features to click, so a click that misses every vector layer asks the API for the
+        // score of the nearest grid cell.
+        map.on("click", async (e) => {
+          if (!map.getLayer("susceptibility-raster")) return;
+          if (map.getLayoutProperty("susceptibility-raster", "visibility") === "none") return;
+          if (map.queryRenderedFeatures(e.point, { layers: VECTOR_LAYERS.filter((id) => map.getLayer(id)) }).length) return;
+          try {
+            const cell = await api.susceptibilityAt(+e.lngLat.lng.toFixed(5), +e.lngLat.lat.toFixed(5));
+            setSelected({ title: "Susceptibility cell (250 m)", rows: toRows(cell) });
+          } catch {
+            setSelected(null); // outside the study area
+          }
+        });
+        for (const id of VECTOR_LAYERS) {
           map.on("mouseenter", id, () => (map.getCanvas().style.cursor = "pointer"));
           map.on("mouseleave", id, () => (map.getCanvas().style.cursor = ""));
         }
@@ -257,6 +309,7 @@ export default function ImpactMap() {
     });
 
     return () => {
+      themeObserver.disconnect();
       map.remove();
       mapRef.current = null;
     };
@@ -285,89 +338,193 @@ export default function ImpactMap() {
     const map = mapRef.current;
     if (!map) return;
     const visibility = (on: boolean) => (on ? "visible" : "none");
-    if (map.getLayer("boundary-line")) map.setLayoutProperty("boundary-line", "visibility", visibility(layers.boundary));
-    if (map.getLayer("susceptibility-raster"))
-      map.setLayoutProperty("susceptibility-raster", "visibility", visibility(layers.susceptibilityGrid));
-    if (map.getLayer("susceptibility-points"))
-      map.setLayoutProperty("susceptibility-points", "visibility", visibility(layers.susceptibility));
-    if (map.getLayer("facilities-points"))
-      map.setLayoutProperty("facilities-points", "visibility", visibility(layers.facilities));
-    if (map.getLayer("buildings-fill")) map.setLayoutProperty("buildings-fill", "visibility", visibility(layers.buildings));
+    const set = (id: string, on: boolean) => map.getLayer(id) && map.setLayoutProperty(id, "visibility", visibility(on));
+    set("boundary-line", layers.boundary);
+    set("susceptibility-raster", layers.susceptibilityGrid);
+    set("susceptibility-points", layers.susceptibility);
+    set("facilities-points", layers.facilities);
+    set("buildings-fill", layers.buildings);
   }, [layers]);
+
+  const legendEmpty = !layers.susceptibilityGrid && !layers.susceptibility && !layers.facilities && !layers.buildings;
 
   return (
     <div className="relative h-full w-full">
       <div ref={containerRef} className="h-full w-full" />
 
-      <div className="absolute left-3 top-3 w-64 rounded-lg border border-zinc-200 bg-white/95 p-3 text-sm shadow-lg backdrop-blur dark:border-zinc-800 dark:bg-zinc-900/95">
-        <h3 className="mb-2 font-semibold">Layers</h3>
-        {(
-          [
-            ["boundary", "Study area boundary"],
-            ["susceptibilityGrid", "Susceptibility map (250m grid)"],
-            ["susceptibility", "Susceptibility samples (training/test points)"],
-            ["facilities", "Critical facilities"],
-            ["buildings", "Buildings (viewport-limited)"],
-          ] as const
-        ).map(([key, label]) => (
-          <label key={key} className="flex items-center gap-2 py-0.5">
-            <input
-              type="checkbox"
-              checked={layers[key]}
-              onChange={(e) => setLayers((prev) => ({ ...prev, [key]: e.target.checked }))}
-            />
-            {label}
-          </label>
-        ))}
-        {layers.susceptibilityGrid && (
-          <div className="mt-2 text-xs text-zinc-500">
-            <p className="mb-1 font-medium text-zinc-600 dark:text-zinc-300">Susceptibility class (calibrated score)</p>
-            {SUSCEPTIBILITY_CLASSES.map((c) => (
-              <div key={c.label} className="flex items-center gap-2 py-px">
-                <span className="inline-block h-3 w-4 rounded-sm" style={{ background: c.color }} />
-                <span className="w-16">{c.label}</span>
-                <span className="text-zinc-400">{c.range}</span>
-              </div>
+      {/* Layers */}
+      <div className="map-panel absolute left-3 top-3 w-[min(17rem,calc(100%-1.5rem))]">
+        <button
+          type="button"
+          onClick={() => setPanelOpen((o) => !o)}
+          className="flex w-full items-center justify-between px-4 py-3"
+          aria-expanded={panelOpen}
+        >
+          <span className="font-semibold">Layers</span>
+          <Chevron open={panelOpen} />
+        </button>
+        {panelOpen && (
+          <div className="space-y-0.5 border-t border-line px-2 py-2">
+            {LAYER_ROWS.map(({ key, label, hint }) => (
+              <label
+                key={key}
+                className="flex cursor-pointer items-start gap-3 rounded-lg px-2 py-1.5 hover:bg-surface-2"
+              >
+                <input
+                  type="checkbox"
+                  className="peer sr-only"
+                  checked={layers[key]}
+                  onChange={(e) => setLayers((prev) => ({ ...prev, [key]: e.target.checked }))}
+                />
+                <span
+                  aria-hidden
+                  className={`relative mt-0.5 h-4 w-7 shrink-0 rounded-full transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-accent ${
+                    layers[key] ? "bg-accent" : "bg-line"
+                  }`}
+                >
+                  <span
+                    className={`absolute top-0.5 h-3 w-3 rounded-full bg-white shadow transition-all ${
+                      layers[key] ? "left-3.5" : "left-0.5"
+                    }`}
+                  />
+                </span>
+                <span className="leading-tight">
+                  <span className="block font-medium">{label}</span>
+                  {hint && <span className="text-xs text-muted">{hint}</span>}
+                </span>
+              </label>
             ))}
-            <p className="mt-1">Click the map for the score of a 250 m cell.</p>
+            {layers.buildings && buildingsCount > 0 && (
+              <p className="px-2 pt-1 text-xs text-muted">
+                {buildingsCount.toLocaleString()} buildings in view{buildingsTruncated ? " (capped, zoom in for all)" : ""}.
+              </p>
+            )}
+            {layers.susceptibilityGrid && !rasterAvailable && (
+              <p className="px-2 pt-1 text-xs text-muted">The susceptibility map is not available on this server yet.</p>
+            )}
           </div>
         )}
-        {layers.buildings && (
-          <p className="mt-1 text-xs text-zinc-500">
-            Showing {buildingsCount.toLocaleString()} buildings in view
-            {buildingsTruncated ? " (capped — zoom in for all)" : ""}.
-          </p>
-        )}
-        <p className="mt-2 border-t border-zinc-200 pt-2 text-xs text-zinc-500 dark:border-zinc-800">
-          Susceptibility map is 250m-resolution and relative (not calibrated to real-world
-          prevalence). Forecast rainfall and live impact per tambon are on the Early Warning
-          page.
-        </p>
       </div>
 
+      {/* Legend */}
+      {!legendEmpty && (
+        <div className="map-panel absolute bottom-8 right-3 w-[min(15rem,calc(100%-1.5rem))]">
+          <button
+            type="button"
+            onClick={() => setLegendOpen((o) => !o)}
+            className="flex w-full items-center justify-between px-4 py-2.5"
+            aria-expanded={legendOpen}
+          >
+            <span className="font-semibold">Legend</span>
+            <Chevron open={legendOpen} />
+          </button>
+          {legendOpen && (
+            <div className="max-h-[calc(100dvh-16rem)] space-y-3 overflow-y-auto border-t border-line px-4 py-3 text-xs">
+              {(layers.susceptibilityGrid || layers.susceptibility) && (
+                <LegendSection title="Susceptibility (calibrated score)">
+                  {SUSCEPTIBILITY_CLASSES.map((c) => (
+                    <LegendRow key={c.label} swatch={<Swatch color={c.color} />} label={c.label} note={c.range} />
+                  ))}
+                  {layers.susceptibility && (
+                    <LegendRow swatch={<Swatch color="#a1a1aa" round />} label="Sample with no held-out score" />
+                  )}
+                </LegendSection>
+              )}
+              {layers.facilities && (
+                <LegendSection title="Critical facilities" columns>
+                  {[...FACILITY_GROUPS, OTHER_FACILITY].map((g) => (
+                    <LegendRow key={g.label} swatch={<Swatch color={g.color} round />} label={g.label} />
+                  ))}
+                </LegendSection>
+              )}
+              {layers.buildings && (
+                <LegendSection title="Exposure">
+                  <LegendRow swatch={<Swatch color={BUILDING_COLOR} />} label="Building footprint" />
+                </LegendSection>
+              )}
+              <p className="leading-snug text-subtle">
+                Relative susceptibility, not calibrated to real-world prevalence. Click the map for a cell&apos;s score.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Details of the clicked feature */}
+      {selected && (
+        <div className="map-panel absolute right-14 top-3 w-[min(18rem,calc(100%-5rem))]">
+          <div className="flex items-center justify-between px-4 py-2.5">
+            <span className="font-semibold">{selected.title}</span>
+            <button
+              type="button"
+              className="rounded p-1 text-muted hover:bg-surface-2 hover:text-fg"
+              onClick={() => setSelected(null)}
+              aria-label="Close details"
+            >
+              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                <path d="M6 6l12 12M18 6 6 18" />
+              </svg>
+            </button>
+          </div>
+          <dl className="max-h-64 overflow-y-auto border-t border-line px-4 py-2 text-xs">
+            {selected.rows.map(([k, v]) => (
+              <div key={k} className="flex justify-between gap-4 py-1">
+                <dt className="capitalize text-muted">{k}</dt>
+                <dd className="text-right font-medium capitalize tabular-nums">{v}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+      )}
+
       {loadError && (
-        <div className="absolute left-3 bottom-3 rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-700 shadow-lg dark:border-red-900 dark:bg-red-950 dark:text-red-300">
+        <div className="note-danger absolute left-1/2 top-3 -translate-x-1/2 text-xs shadow-lg">
           Failed to load map data: {loadError}
         </div>
       )}
-
-      {selected && (
-        <div className="absolute right-3 bottom-3 max-h-64 w-80 overflow-auto rounded-lg border border-zinc-200 bg-white/95 p-3 text-xs shadow-lg backdrop-blur dark:border-zinc-800 dark:bg-zinc-900/95">
-          <div className="mb-1 flex items-center justify-between">
-            <span className="font-semibold">{String(selected.layer)}</span>
-            <button className="text-zinc-400 hover:text-zinc-700" onClick={() => setSelected(null)}>
-              ✕
-            </button>
-          </div>
-          <pre className="whitespace-pre-wrap font-mono">
-            {JSON.stringify(
-              Object.fromEntries(Object.entries(selected).filter(([k]) => k !== "layer")),
-              null,
-              2
-            )}
-          </pre>
-        </div>
-      )}
     </div>
+  );
+}
+
+function Chevron({ open }: { open: boolean }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className={`h-4 w-4 text-muted transition-transform ${open ? "" : "-rotate-90"}`}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      aria-hidden
+    >
+      <path d="m6 9 6 6 6-6" />
+    </svg>
+  );
+}
+
+function LegendSection({ title, columns = false, children }: { title: string; columns?: boolean; children: React.ReactNode }) {
+  return (
+    <div>
+      <div className="mb-1.5 font-medium text-fg">{title}</div>
+      <div className={columns ? "grid grid-cols-2 gap-x-3 gap-y-1" : "space-y-1"}>{children}</div>
+    </div>
+  );
+}
+
+function LegendRow({ swatch, label, note }: { swatch: React.ReactNode; label: string; note?: string }) {
+  return (
+    <div className="flex items-center gap-2">
+      {swatch}
+      <span className="flex-1 text-muted">{label}</span>
+      {note && <span className="tabular-nums text-subtle">{note}</span>}
+    </div>
+  );
+}
+
+function Swatch({ color, round = false }: { color: string; round?: boolean }) {
+  return (
+    <span
+      className={`inline-block shrink-0 border border-black/10 ${round ? "h-2.5 w-2.5 rounded-full" : "h-3 w-4 rounded-sm"}`}
+      style={{ background: color }}
+    />
   );
 }

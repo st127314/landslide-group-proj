@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const LINKS = [
   { href: "/", label: "Overview" },
@@ -13,23 +14,29 @@ const LINKS = [
 export default function Nav() {
   const pathname = usePathname();
   return (
-    <header className="border-b border-zinc-200 bg-white/90 backdrop-blur dark:border-zinc-800 dark:bg-black/80 sticky top-0 z-20">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
-        <Link href="/" className="font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
-          Landslide Impact
-          <span className="ml-2 text-xs font-normal text-zinc-500">Southern Thailand</span>
+    <header className="sticky top-0 z-30 h-14 border-b border-line bg-surface/90 backdrop-blur">
+      <div className="mx-auto flex h-full max-w-7xl items-center gap-6 px-4 sm:px-6">
+        <Link href="/" className="flex shrink-0 items-center gap-2.5">
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-accent-fg">
+            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" aria-hidden>
+              <path d="M2 20 9 8l4 6 3-4 6 10z" />
+            </svg>
+          </span>
+          <span className="leading-tight">
+            <span className="block text-sm font-semibold tracking-tight">Landslide Impact</span>
+            <span className="hidden text-[11px] text-muted sm:block">Southern Thailand</span>
+          </span>
         </Link>
-        <nav className="flex gap-1">
+        <nav className="-mb-px flex h-full flex-1 items-stretch gap-1 overflow-x-auto">
           {LINKS.map((link) => {
             const active = pathname === link.href;
             return (
               <Link
                 key={link.href}
                 href={link.href}
-                className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-                  active
-                    ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
-                    : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-900"
+                aria-current={active ? "page" : undefined}
+                className={`flex items-center whitespace-nowrap border-b-2 px-3 text-sm font-medium transition-colors ${
+                  active ? "border-accent text-fg" : "border-transparent text-muted hover:text-fg"
                 }`}
               >
                 {link.label}
@@ -37,6 +44,7 @@ export default function Nav() {
             );
           })}
         </nav>
+        <ThemeToggle />
       </div>
     </header>
   );

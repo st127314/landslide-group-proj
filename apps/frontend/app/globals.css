@@ -1,26 +1,140 @@
 @import "tailwindcss";
 
+/* Theme follows the .dark class on <html> (set before paint by the script in layout.tsx), not only the OS setting,
+   so the header toggle can override it. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --surface-2: #f1f3f6;
+  --line: #e3e6eb;
+  --fg: #111827;
+  --muted: #5b6472;
+  --subtle: #8a93a1;
+  --accent: #1c5cab;
+  --accent-fg: #ffffff;
+  --accent-soft: #e8f0fb;
+  --warn-bg: #fff8eb;
+  --warn-line: #f5dfb3;
+  --warn-fg: #8a5300;
+  --danger-bg: #fdeeee;
+  --danger-line: #f5c9c9;
+  --danger-fg: #a12020;
+  --shadow: 0 1px 2px rgb(16 24 40 / 0.05), 0 1px 3px rgb(16 24 40 / 0.06);
+  --shadow-lg: 0 8px 24px rgb(16 24 40 / 0.12);
+  color-scheme: light;
+}
+
+.dark {
+  --bg: #0b0f15;
+  --surface: #121821;
+  --surface-2: #19212c;
+  --line: #253041;
+  --fg: #e7ebf0;
+  --muted: #9aa4b2;
+  --subtle: #6b7584;
+  --accent: #6ea8ef;
+  --accent-fg: #0b0f15;
+  --accent-soft: #15253b;
+  --warn-bg: #241b0c;
+  --warn-line: #4a3612;
+  --warn-fg: #f1c27a;
+  --danger-bg: #2a1214;
+  --danger-line: #5a2329;
+  --danger-fg: #f3a4a4;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-lg: 0 8px 24px rgb(0 0 0 / 0.5);
+  color-scheme: dark;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-subtle: var(--subtle);
+  --color-accent: var(--accent);
+  --color-accent-fg: var(--accent-fg);
+  --color-accent-soft: var(--accent-soft);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+@layer components {
+  .card {
+    @apply rounded-xl border border-line bg-surface p-5;
+    box-shadow: var(--shadow);
+  }
+  .card-title {
+    @apply text-base font-semibold tracking-tight text-fg;
+  }
+  .card-desc {
+    @apply mt-1 text-sm text-muted;
+  }
+  .eyebrow {
+    @apply text-xs font-medium uppercase tracking-wider text-subtle;
+  }
+  .note-warn {
+    @apply rounded-lg border p-3 text-xs leading-relaxed;
+    background: var(--warn-bg);
+    border-color: var(--warn-line);
+    color: var(--warn-fg);
+  }
+  .note-danger {
+    @apply rounded-lg border p-4 text-sm;
+    background: var(--danger-bg);
+    border-color: var(--danger-line);
+    color: var(--danger-fg);
+  }
+  .data-table {
+    @apply w-full border-collapse text-sm;
+  }
+  .data-table thead th {
+    @apply border-b border-line bg-surface-2 px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-muted;
+  }
+  .data-table tbody td {
+    @apply border-b border-line px-3 py-2;
+  }
+  .data-table tbody tr:last-child td {
+    @apply border-b-0;
+  }
+  .data-table tbody tr:hover td {
+    @apply bg-surface-2;
+  }
+  .map-panel {
+    @apply rounded-xl border border-line bg-surface/95 text-sm backdrop-blur;
+    box-shadow: var(--shadow-lg);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* MapLibre controls follow the theme. */
+.dark .maplibregl-ctrl-group {
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
+}
+.dark .maplibregl-ctrl-group button + button {
+  border-top-color: var(--line);
+}
+.dark .maplibregl-ctrl-icon {
+  filter: invert(1);
+}
+.dark .maplibregl-ctrl-attrib,
+.dark .maplibregl-ctrl-scale {
+  background: rgb(18 24 33 / 0.85);
+  color: var(--muted);
+}
+.dark .maplibregl-ctrl-attrib a {
+  color: var(--muted);
+}
+.dark .maplibregl-ctrl-scale {
+  border-color: var(--muted);
 }
