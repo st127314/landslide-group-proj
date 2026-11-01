@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ChartColumn, CloudRain, LayoutDashboard, Map, Mountain } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 
 const LINKS = [
-  { href: "/", label: "Overview" },
-  { href: "/impact", label: "Live Impact" },
-  { href: "/warning", label: "Early Warning" },
-  { href: "/model", label: "Model" },
+  { href: "/", label: "Overview", icon: LayoutDashboard },
+  { href: "/impact", label: "Live Impact", icon: Map },
+  { href: "/warning", label: "Early Warning", icon: CloudRain },
+  { href: "/model", label: "Model", icon: ChartColumn },
 ];
 
 export default function Nav() {
@@ -18,9 +19,7 @@ export default function Nav() {
       <div className="mx-auto flex h-full max-w-7xl items-center gap-6 px-4 sm:px-6">
         <Link href="/" className="flex shrink-0 items-center gap-2.5">
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-accent-fg">
-            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" aria-hidden>
-              <path d="M2 20 9 8l4 6 3-4 6 10z" />
-            </svg>
+            <Mountain className="h-5 w-5" aria-hidden />
           </span>
           <span className="leading-tight">
             <span className="block text-sm font-semibold tracking-tight">Landslide Impact</span>
@@ -35,10 +34,11 @@ export default function Nav() {
                 key={link.href}
                 href={link.href}
                 aria-current={active ? "page" : undefined}
-                className={`flex items-center whitespace-nowrap border-b-2 px-3 text-sm font-medium transition-colors ${
+                className={`flex items-center gap-2 whitespace-nowrap border-b-2 px-3 text-sm font-medium transition-colors ${
                   active ? "border-accent text-fg" : "border-transparent text-muted hover:text-fg"
                 }`}
               >
+                <link.icon className="hidden h-4 w-4 md:block" aria-hidden />
                 {link.label}
               </Link>
             );

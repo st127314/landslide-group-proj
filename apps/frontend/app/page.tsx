@@ -2,6 +2,7 @@ import Link from "next/link";
 import { api } from "@/lib/api";
 import StatCard from "@/components/StatCard";
 import Page from "@/components/Page";
+import { ArrowRight, Building2, ChartColumn, CircleDashed, Hospital, Mountain, Users } from "lucide-react";
 import PipelineStatusList from "@/components/PipelineStatusList";
 
 function fmt(n: number | null | undefined, digits = 0) {
@@ -42,21 +43,21 @@ export default async function OverviewPage() {
       {overview && (
         <>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-            <StatCard label="Landslide events" value={fmt(overview.landslide_events)} />
+            <StatCard label="Landslide events" icon={Mountain} value={fmt(overview.landslide_events)} />
             <StatCard
-              label="Non-landslide samples"
+              label="Non-landslide samples" icon={CircleDashed}
               value={fmt(overview.non_landslide_samples)}
               sub="Paired pseudo-absence points"
             />
-            <StatCard label="Buildings mapped" value={fmt(overview.buildings_mapped)} sub="OSM footprints" />
-            <StatCard label="Critical facilities" value={fmt(overview.facilities_mapped)} sub="Hospitals, schools, emergency, transport, worship" />
+            <StatCard label="Buildings mapped" icon={Building2} value={fmt(overview.buildings_mapped)} sub="OSM footprints" />
+            <StatCard label="Critical facilities" icon={Hospital} value={fmt(overview.facilities_mapped)} sub="Hospitals, schools, emergency, transport, worship" />
             <StatCard
-              label="Population (study area)"
+              label="Population (study area)" icon={Users}
               value={fmt(overview.population_estimate)}
               sub={`WorldPop ${overview.population_source_year}, constrained`}
             />
             <StatCard
-              label="Best model ROC-AUC"
+              label="Best model ROC-AUC" icon={ChartColumn}
               value={overview.best_model_roc_auc ? overview.best_model_roc_auc.toFixed(3) : "—"}
               sub={overview.best_model ?? undefined}
             />
@@ -75,8 +76,8 @@ export default async function OverviewPage() {
               <h2 className="card-title">What you can do now</h2>
               <ul className="mt-3 space-y-3 text-sm">
                 <li>
-                  <Link href="/impact" className="font-medium text-accent hover:underline">
-                    Live Impact map →
+                  <Link href="/impact" className="inline-flex items-center gap-1 font-medium text-accent hover:underline">
+                    Live Impact map <ArrowRight className="h-3.5 w-3.5" aria-hidden />
                   </Link>
                   <p className="text-muted">
                     The 250 m susceptibility map, buildings and critical facilities on a map; the
@@ -84,8 +85,8 @@ export default async function OverviewPage() {
                   </p>
                 </li>
                 <li>
-                  <Link href="/warning" className="font-medium text-accent hover:underline">
-                    Early Warning →
+                  <Link href="/warning" className="inline-flex items-center gap-1 font-medium text-accent hover:underline">
+                    Early Warning <ArrowRight className="h-3.5 w-3.5" aria-hidden />
                   </Link>
                   <p className="text-muted">
                     The latest GFS rainfall forecast per tambon, the live impact table and a what-if rainfall
@@ -93,8 +94,8 @@ export default async function OverviewPage() {
                   </p>
                 </li>
                 <li>
-                  <Link href="/model" className="font-medium text-accent hover:underline">
-                    Model page →
+                  <Link href="/model" className="inline-flex items-center gap-1 font-medium text-accent hover:underline">
+                    Model page <ArrowRight className="h-3.5 w-3.5" aria-hidden />
                   </Link>
                   <p className="text-muted">
                     Methodology, per-model cross-validation/test metrics, thresholds and

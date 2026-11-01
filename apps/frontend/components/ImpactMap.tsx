@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import * as maplibregl from "maplibre-gl";
 import type { Map as MapLibreMap } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
+import { ChevronDown, Layers as LayersIcon, List, MapPin, TriangleAlert, X } from "lucide-react";
 import { api } from "@/lib/api";
 
 // Served from public/ (copied there by scripts/copy-maplibre-worker.mjs): the bundle does not ship the worker.
@@ -360,7 +361,7 @@ export default function ImpactMap() {
           className="flex w-full items-center justify-between px-4 py-3"
           aria-expanded={panelOpen}
         >
-          <span className="font-semibold">Layers</span>
+          <span className="flex items-center gap-2 font-semibold"><LayersIcon className="h-4 w-4 text-accent" aria-hidden />Layers</span>
           <Chevron open={panelOpen} />
         </button>
         {panelOpen && (
@@ -415,7 +416,7 @@ export default function ImpactMap() {
             className="flex w-full items-center justify-between px-4 py-2.5"
             aria-expanded={legendOpen}
           >
-            <span className="font-semibold">Legend</span>
+            <span className="flex items-center gap-2 font-semibold"><List className="h-4 w-4 text-accent" aria-hidden />Legend</span>
             <Chevron open={legendOpen} />
           </button>
           {legendOpen && (
@@ -454,16 +455,14 @@ export default function ImpactMap() {
       {selected && (
         <div className="map-panel absolute right-14 top-3 w-[min(18rem,calc(100%-5rem))]">
           <div className="flex items-center justify-between px-4 py-2.5">
-            <span className="font-semibold">{selected.title}</span>
+            <span className="flex items-center gap-2 font-semibold"><MapPin className="h-4 w-4 text-accent" aria-hidden />{selected.title}</span>
             <button
               type="button"
               className="rounded p-1 text-muted hover:bg-surface-2 hover:text-fg"
               onClick={() => setSelected(null)}
               aria-label="Close details"
             >
-              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-                <path d="M6 6l12 12M18 6 6 18" />
-              </svg>
+              <X className="h-4 w-4" aria-hidden />
             </button>
           </div>
           <dl className="max-h-64 overflow-y-auto border-t border-line px-4 py-2 text-xs">
@@ -478,7 +477,8 @@ export default function ImpactMap() {
       )}
 
       {loadError && (
-        <div className="note-danger absolute left-1/2 top-3 -translate-x-1/2 text-xs shadow-lg">
+        <div className="note-danger absolute left-1/2 top-3 flex -translate-x-1/2 items-center gap-2 text-xs shadow-lg">
+          <TriangleAlert className="h-4 w-4 shrink-0" aria-hidden />
           Failed to load map data: {loadError}
         </div>
       )}
@@ -487,18 +487,7 @@ export default function ImpactMap() {
 }
 
 function Chevron({ open }: { open: boolean }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      className={`h-4 w-4 text-muted transition-transform ${open ? "" : "-rotate-90"}`}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      aria-hidden
-    >
-      <path d="m6 9 6 6 6-6" />
-    </svg>
-  );
+  return <ChevronDown className={`h-4 w-4 text-muted transition-transform ${open ? "" : "-rotate-90"}`} aria-hidden />;
 }
 
 function LegendSection({ title, columns = false, children }: { title: string; columns?: boolean; children: React.ReactNode }) {

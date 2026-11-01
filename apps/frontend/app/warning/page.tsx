@@ -2,9 +2,19 @@ import { api } from "@/lib/api";
 import { Badge, CLASS_LABELS } from "@/components/Badge";
 import ScenarioPanel from "@/components/ScenarioPanel";
 import Page from "@/components/Page";
+import { CalendarRange, Clock, CloudRain, MapPinned, type LucideIcon } from "lucide-react";
 
 function fmtUtc(iso: string) {
   return new Date(iso).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short", timeZone: "UTC" }) + " UTC";
+}
+
+function CardLabel({ icon: Icon, children }: { icon: LucideIcon; children: React.ReactNode }) {
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <div className="eyebrow">{children}</div>
+      <Icon className="h-4 w-4 shrink-0 text-accent" aria-hidden />
+    </div>
+  );
 }
 
 const IMPACT_ORDER = ["very_high", "high", "moderate", "low", "not_assessed"];
@@ -52,24 +62,24 @@ export default async function WarningPage() {
         <>
           <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div className="card p-4">
-              <div className="eyebrow">GFS model run</div>
+              <CardLabel icon={Clock}>GFS model run</CardLabel>
               <div className="mt-2 text-base font-semibold tabular-nums">{fmtUtc(forecast.gfs_run_utc)}</div>
-              <div className="eyebrow">fetched {fmtUtc(forecast.generated_utc)}</div>
+              <div className="mt-1 text-xs text-muted">fetched {fmtUtc(forecast.generated_utc)}</div>
             </div>
             <div className="card p-4">
-              <div className="eyebrow">Next 24 h window</div>
+              <CardLabel icon={CalendarRange}>Next 24 h window</CardLabel>
               <div className="mt-2 text-base font-semibold tabular-nums">{fmtUtc(forecast.window_start_utc)}</div>
-              <div className="eyebrow">to {fmtUtc(forecast.window_24h_end_utc)}</div>
+              <div className="mt-1 text-xs text-muted">to {fmtUtc(forecast.window_24h_end_utc)}</div>
             </div>
             <div className="card p-4">
-              <div className="text-xs text-muted">Heaviest 24 h forecast</div>
+              <CardLabel icon={CloudRain}>Heaviest 24 h forecast</CardLabel>
               <div className="mt-2 text-base font-semibold tabular-nums">{forecast.summary.max_24h_mm?.toFixed(1)} mm</div>
-              <div className="text-xs text-muted">median {forecast.summary.median_24h_mm?.toFixed(1)} mm</div>
+              <div className="mt-1 text-xs text-muted">median {forecast.summary.median_24h_mm?.toFixed(1)} mm</div>
             </div>
             <div className="card p-4">
-              <div className="text-xs text-muted">Tambons evaluated</div>
+              <CardLabel icon={MapPinned}>Tambons evaluated</CardLabel>
               <div className="mt-2 text-base font-semibold tabular-nums">{forecast.summary.tambons.toLocaleString()}</div>
-              <div className="text-xs text-muted">
+              <div className="mt-1 text-xs text-muted">
                 {Object.entries(forecast.summary.tambons_by_local_class_24h ?? forecast.summary.tambons_by_class_24h)
                   .map(([k, v]) => `${v} ${CLASS_LABELS[k] ?? k.replaceAll("_", " ")}`)
                   .join(" · ")}

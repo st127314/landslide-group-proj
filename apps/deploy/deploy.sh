@@ -38,6 +38,10 @@ healthy() {
 
 if healthy; then
   echo "Deployed $IMAGE_TAG"
+  # Keep only this release and the previous one (the rollback target): every release adds ~1 GB of images and the
+  # server disk is small.
+  docker images --format '{{.Repository}}:{{.Tag}}' | grep -E "^ghcr.io/$GHCR_OWNER/landslide-(backend|frontend|forecast):" \
+    | grep -vE ":(${IMAGE_TAG}|${previous:-none}|latest)$" | xargs -r docker rmi >/dev/null 2>&1 || true
   docker image prune -f >/dev/null
 else
   echo "New release $IMAGE_TAG is unhealthy" >&2
