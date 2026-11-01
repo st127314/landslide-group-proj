@@ -64,3 +64,22 @@ services:
     mem_limit: ${FRONTEND_MEM_LIMIT:-300m}
     depends_on: [backend]
     expose: ["3000"]
+
+  # One-shot job, never started by `docker compose up` (profile "jobs"). Cron runs it every 3 hours:
+  #   docker compose run --rm forecast
+  # It writes only the live forecast and the impact overlay; the backend re-reads both on every request.
+  forecast:
+    image: ghcr.io/${GHCR_OWNER}/landslide-forecast:${IMAGE_TAG:-latest}
+    profiles: ["jobs"]
+    user: "${HOST_UID:-1000}:${HOST_GID:-1000}"   # owner of /opt/landslide/project, so the job can write its two folders
+    environment:
+      GEE_KEY_FILE: /run/secrets/gee_key.json
+    volumes:
+      - ${DATA_ROOT:-/opt/landslide/project}/data:/srv/project/data:ro
+      - ${DATA_ROOT:-/opt/landslide/project}/results/live_forecast:/srv/project/results/live_forecast
+      - ${DATA_ROOT:-/opt/landslide/project}/results/impact_overlay:/srv/project/results/impact_overlay
+      - ${GEE_KEY_PATH:-/opt/landslide/secrets/gee_key.json}:/run/secrets/gee_key.json:ro
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 300m

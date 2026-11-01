@@ -21,6 +21,8 @@ previous=""
 
 # SKIP_PULL=1: the images were loaded onto the server directly (deploy-from-laptop.sh), no registry involved
 [ "${SKIP_PULL:-0}" = "1" ] || docker compose pull backend frontend
+# The forecast job image is pulled too, so the next cron run uses this release (missing image: job just skipped).
+[ "${SKIP_PULL:-0}" = "1" ] || docker compose --profile jobs pull forecast || echo "forecast image not pulled" >&2
 docker compose up -d --remove-orphans
 
 healthy() {

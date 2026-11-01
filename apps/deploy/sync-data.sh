@@ -20,6 +20,8 @@ FILES=(
   "data/boundary/southern_thailand_web.geojson"   # slimmed by scripts/make_web_layers.py
   "data/external/facilities_web.geojson"
   "data/external/worldpop_manifest.json"
+  "data/boundary/southern_thailand_tambon_points.csv"   # forecast job inputs
+  "data/external/rain_percentiles_24h_tambon.csv"
   "data/external/manifest.json"
   "models/susceptibility/model_metadata.json"
   "models/susceptibility/landslide_sample_susceptibility_scores.csv"

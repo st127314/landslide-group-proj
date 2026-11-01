@@ -123,6 +123,17 @@ jobs:
             ${{ env.REGISTRY }}/${{ steps.meta.outputs.owner }}/landslide-frontend:latest
           cache-from: type=gha,scope=frontend
           cache-to: type=gha,mode=max,scope=frontend
+      - name: Forecast job image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/forecast/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ steps.meta.outputs.owner }}/landslide-forecast:${{ steps.meta.outputs.tag }}
+            ${{ env.REGISTRY }}/${{ steps.meta.outputs.owner }}/landslide-forecast:latest
+          cache-from: type=gha,scope=forecast
+          cache-to: type=gha,mode=max,scope=forecast
 
   deploy:
     name: Deploy to AWS
