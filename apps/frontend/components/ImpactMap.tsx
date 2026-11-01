@@ -112,7 +112,8 @@ export default function ImpactMap() {
         const [boundary, facilities, raster] = await Promise.all([
           api.boundary(),
           api.facilities(),
-          api.susceptibilityRaster(),
+          // Optional: the rest of the map still works if the PNG has not been generated or synced yet.
+          api.susceptibilityRaster().catch(() => null),
         ]);
 
         map.addSource("boundary", { type: "geojson", data: boundary as unknown as GeoJSON.FeatureCollection });
@@ -124,22 +125,24 @@ export default function ImpactMap() {
         });
 
         // The 250 m map is one pre-coloured PNG (scripts/make_susceptibility_png.py), drawn under the boundary.
-        map.addSource("susceptibility-raster", {
-          type: "image",
-          url: api.susceptibilityRasterUrl(),
-          coordinates: raster.coordinates as [
-            [number, number], [number, number], [number, number], [number, number],
-          ],
-        });
-        map.addLayer(
-          {
-            id: "susceptibility-raster",
-            type: "raster",
-            source: "susceptibility-raster",
-            paint: { "raster-opacity": 0.7, "raster-resampling": "nearest", "raster-fade-duration": 0 },
-          },
-          "boundary-line"
-        );
+        if (raster) {
+          map.addSource("susceptibility-raster", {
+            type: "image",
+            url: api.susceptibilityRasterUrl(),
+            coordinates: raster.coordinates as [
+              [number, number], [number, number], [number, number], [number, number],
+            ],
+          });
+          map.addLayer(
+            {
+              id: "susceptibility-raster",
+              type: "raster",
+              source: "susceptibility-raster",
+              paint: { "raster-opacity": 0.7, "raster-resampling": "nearest", "raster-fade-duration": 0 },
+            },
+            "boundary-line"
+          );
+        }
 
         map.addSource("susceptibility", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
         map.addLayer({
@@ -202,6 +205,7 @@ export default function ImpactMap() {
         // score of the nearest grid cell.
         const vectorLayers = ["susceptibility-points", "facilities-points", "buildings-fill"];
         map.on("click", async (e) => {
+          if (!map.getLayer("susceptibility-raster")) return;
           if (map.getLayoutProperty("susceptibility-raster", "visibility") === "none") return;
           if (map.queryRenderedFeatures(e.point, { layers: vectorLayers }).length) return;
           try {
