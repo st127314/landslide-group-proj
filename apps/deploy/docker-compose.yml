@@ -12,7 +12,7 @@ name: landslide
 
 services:
   traefik:
-    image: traefik:v3.1
+    image: traefik:v3.7
     restart: unless-stopped
     command:
       - --providers.file.directory=/etc/traefik/dynamic

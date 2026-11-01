@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import * as maplibregl from "maplibre-gl";
 import type { Map as MapLibreMap } from "maplibre-gl";
+import type { FeatureCollection } from "geojson";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { ChevronDown, Layers as LayersIcon, List, MapPin, TriangleAlert, X } from "lucide-react";
 import { api } from "@/lib/api";
@@ -140,7 +141,7 @@ export default function ImpactMap() {
         5000
       );
       (map.getSource("buildings") as maplibregl.GeoJSONSource).setData(
-        data as unknown as GeoJSON.FeatureCollection
+        data as unknown as FeatureCollection
       );
       setBuildingsTruncated(data.truncated);
       setBuildingsCount(data.features.length);
@@ -183,7 +184,7 @@ export default function ImpactMap() {
           api.susceptibilityRaster().catch(() => null),
         ]);
 
-        map.addSource("boundary", { type: "geojson", data: boundary as unknown as GeoJSON.FeatureCollection });
+        map.addSource("boundary", { type: "geojson", data: boundary as unknown as FeatureCollection });
         map.addLayer({
           id: "boundary-line",
           type: "line",
@@ -252,7 +253,7 @@ export default function ImpactMap() {
 
         map.addSource("facilities", {
           type: "geojson",
-          data: facilities as unknown as GeoJSON.FeatureCollection,
+          data: facilities as unknown as FeatureCollection,
         });
         const colorExpr = [
           "match",
@@ -326,7 +327,7 @@ export default function ImpactMap() {
       .susceptibility()
       .then((data) =>
         (map.getSource("susceptibility") as maplibregl.GeoJSONSource).setData(
-          data as unknown as GeoJSON.FeatureCollection
+          data as unknown as FeatureCollection
         )
       )
       .catch((e) => {

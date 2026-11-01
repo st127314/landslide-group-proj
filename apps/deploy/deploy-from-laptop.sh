@@ -35,9 +35,9 @@ for stage in "${STAGES[@]}"; do
     images)
       docker buildx build --platform linux/amd64 --load -t "$BACKEND" "$ROOT/apps/backend"
       docker buildx build --platform linux/amd64 --load --build-arg NEXT_PUBLIC_API_URL= -t "$FRONTEND" "$ROOT/apps/frontend"
-      docker pull --platform linux/amd64 traefik:v3.1 ;;
+      docker pull --platform linux/amd64 traefik:v3.7 ;;
     ship)
-      docker save "$BACKEND" "$FRONTEND" traefik:v3.1 | gzip | $SSH "$HOST" 'gunzip | sudo docker load' ;;
+      docker save "$BACKEND" "$FRONTEND" traefik:v3.7 | gzip | $SSH "$HOST" 'gunzip | sudo docker load' ;;
     data)
       SKIP_BUILDINGS="$LIGHT" SSH_EXTRA="${SSH_EXTRA:-}" "$ROOT/apps/deploy/sync-data.sh" "$KEY" "$HOST" ;;
     up)
