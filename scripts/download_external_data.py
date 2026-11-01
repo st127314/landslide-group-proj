@@ -27,7 +27,7 @@ import shapely
 PROJECT_DIR = Path(__file__).resolve().parent.parent
 AOI_PATH = PROJECT_DIR / "data" / "boundary" / "southern_thailand.geojson"
 OUTPUT_DIR = PROJECT_DIR / "data" / "external"
-RAW_DIR = PROJECT_DIR / "cache" / "external_raw"  # large source downloads, not part of the deliverable
+RAW_DIR = PROJECT_DIR / "data" / "raw" / "external"  # large source downloads, not part of the deliverable
 BUFFER_METERS = 20_000
 METRIC_CRS = "EPSG:32647"
 # Dated OSM snapshot makes reruns reproducible. Update this URL for newer data.

@@ -11,7 +11,7 @@ Inputs: data/processed/landslide_event_factors_cleaned.csv; results/experiments/
 point, from a spatial join with the province boundaries); for E4, the earlier dataset with randomly placed
 negatives (data/processed/legacy_random_negatives_factors_cleaned.csv); for the error analysis and calibration,
 models/susceptibility/ produced by the notebook; for the held-out decision value, the 250 m factor grid
-(set FACTOR_GRID to its folder; that step is skipped if the grid is not available).
+(data/processed/factor_grid_points/, or set FACTOR_GRID; that step is skipped if the grid is not available).
 Outputs: results/experiments/results.json and results/experiments/errors.json.
 """
 import json, os, sys, time, warnings

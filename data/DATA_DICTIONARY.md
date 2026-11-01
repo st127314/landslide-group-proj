@@ -64,10 +64,11 @@ All coordinates are WGS 84 (EPSG:4326) unless stated. Missing values are blank. 
 | `*_coverage_pct` | Share of expected half-hour IMERG slots present for that window |
 | `imerg_status`, `rainfall_status`, `error` | Extraction status (all `permanent` / `complete`) |
 
-**`factor_grid_points/`** *(archived, not in this folder)* — the 250 m factor grid behind the susceptibility map: 148 tile CSVs, 1,137,629 points (`px_lon`, `px_lat` and every conditioning factor), sampled from Earth Engine for the 2026-10-09 run. It is an intermediate: the scored map is `results/susceptibility_map/`. To re-run `scripts/predict_susceptibility_grid.py`, restore the folder to `data/processed/factor_grid_points/` or regenerate it with `scripts/gee_sample_factor_grid_points.py`.
+**`factor_grid_points/`** *(local only, not in the git repo)* — the 250 m factor grid behind the susceptibility map: 148 tile CSVs in `factor_grid_points_2026-10-09/`, 1,137,629 points (`px_lon`, `px_lat` and every conditioning factor), sampled from Earth Engine. `scripts/predict_susceptibility_grid.py` and the experiments read it from here; the scored map is `results/susceptibility_map/`.
 
 ## data/boundary/
 - `southern_thailand.geojson` — 14 province polygons (study area).
+- `southern_thailand_web.geojson` — the same provinces simplified to ~100 m with `NAME_1` only, served to the web map (`scripts/make_web_layers.py`).
 - `southern_thailand_tambons.geojson` — 1,055 tambons: `GID_3`, `NAME_3`, `NAME_2` (district), `NAME_1` (province), `area_km2`, `sample_lon`, `sample_lat`.
 - `southern_thailand_tambon_points.csv` — one representative point per tambon (same fields) used for rainfall sampling.
 
@@ -80,6 +81,17 @@ GeoJSON layers clipped to the study area. (The roads / rivers / waterways / faul
 | `worldpop_2020_UNadj_constrained_aoi.tif` | Population per ~100 m pixel, 2020; total 9,385,883 | band 1, no-data −99999 |
 | `rain_percentiles_24h_tambon.csv`, `rain_percentiles_24h_meta.json` | Per-tambon wet-day 24 h rainfall percentiles from CHIRPS 1991–2020 averaged onto the 0.25° GFS grid (wet day ≥ 1 mm); 1,055 rows | `GID_3`, `NAME_*`, `wet_p75_mm`, `wet_p90_mm`, `wet_p95_mm`, `wet_p99_mm`, `wet_day_fraction` |
 | `manifest.json`, `validation.json`, `worldpop_manifest.json` | Counts, extents, checks, sources | |
+
+## data/raw/ *(local only, not in the git repo)*
+Source downloads the pipeline starts from.
+- `gadm41_THA.gpkg` — GADM 4.1 Thailand, read by `scripts/clip_tambon_boundaries.py`.
+- `external/` — `thailand-260908-free.shp.zip` (Geofabrik OSM), `gem_active_faults.geojson`, `LiMW_GIS_2015.gdb.zip` (lithology), each with a `.source.json` recording its URL, read by `scripts/download_external_data.py`; `tha_ppp_2020_UNadj_constrained.tif` (WorldPop), read by `scripts/download_worldpop_population.py`. The scripts download any file that is missing.
+
+## data/cache/ *(local only, not in the git repo)*
+Resumable Earth Engine extraction parts, kept so a rerun skips finished work.
+- `paired_negative_parts/`, `paired_negative_event_factors.csv` — factors for the 6,180 paired negatives (`gee_extract_paired_negatives.py`, read by `assemble_paired_dataset.py`).
+- `imerg_slices/`, `imerg_parts/` — IMERG rainfall for the paired negatives (`gee_imerg_paired_negatives.py`).
+- `imerg_cache/` — raw IMERG point time series (`gee_imerg_antecedent_rainfall.py`).
 
 ## models/
 - `susceptibility/*_pipeline.joblib`, `*_isotonic_calibrator.joblib` — scikit-learn pipeline + isotonic calibrator for the selected model (`svm_rbf`). Loading needs `notebooks/susc_utils.py` on `sys.path`.

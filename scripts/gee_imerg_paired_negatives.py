@@ -2,7 +2,7 @@
 
 Wraps gee_imerg_antecedent_rainfall.py (same windows, same cache, same resume logic: a slice that is
 interrupted resumes from its .part file, failed points are retried, and a run stops after 5 consecutive
-errors). Each slice writes cache/imerg_parts/rain_<start>.csv.
+errors). Each slice writes data/cache/imerg_parts/rain_<start>.csv.
 
     python scripts/gee_imerg_paired_negatives.py --start 0 --count 1000     # one slice (run several in parallel)
     python scripts/gee_imerg_paired_negatives.py --merge                     # checks completeness, writes the output CSV
@@ -20,8 +20,8 @@ import gee_imerg_antecedent_rainfall as rainfall  # noqa: E402
 
 PROJECT_DIR = rainfall.PROJECT_DIR
 NEGATIVES_PATH = PROJECT_DIR / "data" / "inventory" / "non_landslide_events.geojson"
-SLICES_DIR = PROJECT_DIR / "cache" / "imerg_slices"
-PARTS_DIR = PROJECT_DIR / "cache" / "imerg_parts"
+SLICES_DIR = PROJECT_DIR / "data" / "cache" / "imerg_slices"
+PARTS_DIR = PROJECT_DIR / "data" / "cache" / "imerg_parts"
 OUTPUT_CSV = PROJECT_DIR / "data" / "processed" / "non_landslide_event_antecedent_rainfall.csv"
 
 

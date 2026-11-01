@@ -32,7 +32,7 @@ socket.setdefaulttimeout(120)
 import gee_landslide_factors as factors
 
 PROJECT_DIR = factors.PROJECT_DIR
-OUTPUT_DIR = PROJECT_DIR / "cache" / "factor_grid_local"
+OUTPUT_DIR = PROJECT_DIR / "data" / "cache" / "factor_grid_local"
 # None = today (UTC date), i.e. the most recent available NDVI/land-cover
 # snapshot -- a susceptibility map has no single historical event date, so it
 # uses present-day conditions. Set an explicit "YYYY-MM-DD" to pin it instead.

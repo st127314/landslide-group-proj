@@ -227,7 +227,7 @@ The final negatives are produced by four scripts, run in this order (see `docs/M
 
 ```bash
 python3 scripts/generate_paired_negatives.py                  # local, no Earth Engine: writes data/inventory/non_landslide_events.geojson
-python scripts/gee_extract_paired_negatives.py [--start N --count M --slice M --batch-size B]   # Earth Engine: factors -> cache/paired_negative_parts/
+python scripts/gee_extract_paired_negatives.py [--start N --count M --slice M --batch-size B]   # Earth Engine: factors -> data/cache/paired_negative_parts/
 python scripts/gee_extract_paired_negatives.py --merge        # strict: stops unless all 6,180 rows are present
 python scripts/gee_imerg_paired_negatives.py --start N --count M   # Earth Engine: IMERG rainfall slices (run several in parallel)
 python scripts/gee_imerg_paired_negatives.py --merge          # strict: writes data/processed/non_landslide_event_antecedent_rainfall.csv

@@ -90,7 +90,7 @@ Also left out of the local submission folder (the project is about 460 MB; every
 | 4 | `scripts/gee_imerg_paired_negatives.py` (Earth Engine); landslide rainfall unchanged | `data/processed/*_antecedent_rainfall.csv` |
 | 4b | `scripts/assemble_paired_dataset.py` (strict checks) | `data/processed/landslide_event_factors_cleaned.csv` |
 | 5 | `notebooks/landslide_susceptibility_modeling.ipynb` | `models/susceptibility/` |
-| 6 | `scripts/gee_sample_factor_grid_points.py` (Earth Engine) → `data/processed/factor_grid_points/` (an intermediate, archived for the submission), then `predict_susceptibility_grid.py` | `results/susceptibility_map/` |
+| 6 | `scripts/gee_sample_factor_grid_points.py` (Earth Engine) → `data/processed/factor_grid_points/` (local only, not in git), then `predict_susceptibility_grid.py` | `results/susceptibility_map/` |
 | 7 | `notebooks/rainfall_trigger_threshold.ipynb` (exploratory, no skill; not used downstream) | `models/rainfall_trigger/` |
 | 7b | `scripts/compute_rain_percentiles.py` (Earth Engine, ~1 min, one-off) | `data/external/rain_percentiles_24h_tambon.csv` |
 | 8 | `scripts/run_live_gfs_forecast.py` (Earth Engine, ~10 s; rerun for a fresh forecast) | `results/live_forecast/latest.json` |

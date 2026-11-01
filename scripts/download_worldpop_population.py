@@ -25,7 +25,7 @@ gdal.UseExceptions()
 PROJECT_DIR = Path(__file__).resolve().parent.parent
 AOI_PATH = PROJECT_DIR / "data" / "boundary" / "southern_thailand.geojson"
 OUTPUT_DIR = PROJECT_DIR / "data" / "external"
-RAW_DIR = OUTPUT_DIR / "raw"
+RAW_DIR = PROJECT_DIR / "data" / "raw" / "external"
 WORLDPOP_URL = ("https://data.worldpop.org/GIS/Population/"
                 "Global_2000_2020_Constrained/2020/BSGM/THA/"
                 "tha_ppp_2020_UNadj_constrained.tif")

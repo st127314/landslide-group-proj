@@ -7,7 +7,7 @@ landslide rows already in data/processed/landslide_event_factors.csv do not have
 to be re-extracted.
 
 A run can be split into slices with --start/--count; each slice is written to its
-own file (cache/paired_negative_parts/part_<start>.csv).
+own file (data/cache/paired_negative_parts/part_<start>.csv).
 
 Resumable: every batch is flushed to disk as it arrives, and on restart each slice
 reads the Event_IDs already in its file, extracts only the missing ones and APPENDS
@@ -33,8 +33,8 @@ import gee_landslide_factors as factors  # noqa: E402
 
 PROJECT_DIR = factors.PROJECT_DIR
 NEGATIVES_PATH = PROJECT_DIR / "data" / "inventory" / "non_landslide_events.geojson"
-OUTPUT_CSV = PROJECT_DIR / "cache" / "paired_negative_event_factors.csv"  # intermediate; assemble_paired_dataset.py reads it
-PARTS_DIR = PROJECT_DIR / "cache" / "paired_negative_parts"
+OUTPUT_CSV = PROJECT_DIR / "data" / "cache" / "paired_negative_event_factors.csv"  # intermediate; assemble_paired_dataset.py reads it
+PARTS_DIR = PROJECT_DIR / "data" / "cache" / "paired_negative_parts"
 
 
 class AppendingCsvWriter(factors.ChunkedCsvWriter):

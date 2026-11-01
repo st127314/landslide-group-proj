@@ -50,7 +50,7 @@ valid half-hour records. Duplicate timestamps stop processing rather than double
 counting. Row metadata records source, product status, event/cutoff times and
 whether every requested window is complete.
 
-Raw point time series are cached under `cache/imerg_cache/`, keyed by dataset,
+Raw point time series are cached under `data/cache/imerg_cache/`, keyed by dataset,
 status, coordinate, dates and sampling grid. Rerunning reuses completed requests;
 delete the relevant cache files to refresh them after source revisions. Rows are
 written progressively to `.csv.part`; the final CSV replaces the previous output

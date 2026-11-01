@@ -1,7 +1,7 @@
 """Assemble the model-ready tables once the paired negatives have been extracted.
 
 Inputs (all produced by the extraction wrappers' --merge step, which only succeeds when every row is present):
-  cache/paired_negative_event_factors.csv                                factors for the 6,180 paired negatives
+  data/cache/paired_negative_event_factors.csv                           factors for the 6,180 paired negatives
   data/processed/non_landslide_event_antecedent_rainfall.csv             IMERG rainfall for the same points (written by gee_imerg_paired_negatives.py --merge)
   data/inventory/non_landslide_events.geojson                            the paired negatives (generate_paired_negatives.py)
   data/processed/landslide_event_factors.csv                             existing raw table (its landslide rows are kept)
@@ -34,7 +34,7 @@ DROP = ["dist_to_stream"]
 def main():
     raw_old = pd.read_csv(PROCESSED / "landslide_event_factors.csv")
     landslides = raw_old[raw_old["landslide"] == 1]
-    negatives = pd.read_csv(PROJECT_DIR / "cache" / "paired_negative_event_factors.csv")
+    negatives = pd.read_csv(PROJECT_DIR / "data" / "cache" / "paired_negative_event_factors.csv")
     paired = json.loads((INVENTORY / "non_landslide_events.geojson").read_text())["features"]
 
     assert len(landslides) == 6180 and len(negatives) == 6180, (len(landslides), len(negatives))

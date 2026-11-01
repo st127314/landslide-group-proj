@@ -54,7 +54,7 @@ def latest_grid_dir():
     candidates = sorted(GRID_DIR.glob("factor_grid_points_*"))
     if not candidates:
         raise FileNotFoundError(f"No factor_grid_points_* directories under {GRID_DIR}. The factor grid is an intermediate that is not "
-                                "shipped with the submission: restore it from the archive, or regenerate it with "
+                                "in the git repo: copy it into this folder, or regenerate it with "
                                 "scripts/gee_sample_factor_grid_points.py (Earth Engine).")
     return candidates[-1]
 
