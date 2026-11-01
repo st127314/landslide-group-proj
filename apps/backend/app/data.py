@@ -5,6 +5,7 @@ data after re-running a pipeline step.
 """
 
 from functools import lru_cache
+import hashlib
 import json
 
 import numpy as np
@@ -226,7 +227,16 @@ def susceptibility_png():
 
 @lru_cache(maxsize=1)
 def susceptibility_png_bounds():
-    return _read_bytes(paths.SUSCEPTIBILITY_PNG_BOUNDS)
+    """Corner coordinates plus a content hash of the PNG: the map requests the image as ...png?v=<hash>, so a new map
+    is never hidden behind a browser or Cloudflare copy of the old one."""
+    body = _read_bytes(paths.SUSCEPTIBILITY_PNG_BOUNDS)
+    png = susceptibility_png()
+    if body is None:
+        return None
+    bounds = orjson.loads(body)
+    if png is not None:
+        bounds["version"] = hashlib.sha256(png).hexdigest()[:12]
+    return orjson.dumps(bounds)
 
 
 @lru_cache(maxsize=1)

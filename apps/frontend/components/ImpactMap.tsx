@@ -183,7 +183,7 @@ export default function ImpactMap() {
         if (raster) {
           map.addSource("susceptibility-raster", {
             type: "image",
-            url: api.susceptibilityRasterUrl(),
+            url: api.susceptibilityRasterUrl(raster.version),
             coordinates: raster.coordinates as [
               [number, number], [number, number], [number, number], [number, number],
             ],

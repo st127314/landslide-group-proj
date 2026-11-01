@@ -259,13 +259,15 @@ export const api = {
       "default"
     ),
   susceptibilityRaster: () =>
-    getJSON<{ coordinates: [number, number][]; width: number; height: number; cell_m: number }>(
+    getJSON<{ coordinates: [number, number][]; width: number; height: number; cell_m: number; version?: string }>(
       "/api/impact/susceptibility-raster.json",
       undefined,
       "default"
     ),
   buildingsTilesUrl: () => `${API_URL}/api/impact/buildings.pmtiles`,
-  susceptibilityRasterUrl: () => `${API_URL}/api/impact/susceptibility-raster.png`,
+  // ?v= is the PNG's content hash, so a regenerated map gets a new URL past any cached copy.
+  susceptibilityRasterUrl: (version?: string) =>
+    `${API_URL}/api/impact/susceptibility-raster.png${version ? `?v=${version}` : ""}`,
   susceptibilityAt: (lon: number, lat: number) =>
     getJSON<{ lon: number; lat: number; calibrated_probability: number; susceptibility_class: string | null }>(
       `/api/impact/susceptibility-at?lon=${lon}&lat=${lat}`,
