@@ -36,7 +36,8 @@ import pandas as pd
 socket.setdefaulttimeout(120)
 
 PROJECT_DIR = Path(__file__).resolve().parent.parent
-SERVICE_ACCOUNT_KEY = PROJECT_DIR / "scripts" / "service_account" / "key.json"
+# Service-account key, never committed: GEE_KEY_FILE overrides the default location.
+SERVICE_ACCOUNT_KEY = Path(os.getenv("GEE_KEY_FILE") or PROJECT_DIR / "scripts" / "service_account" / "key.json")
 TAMBON_POINTS_CSV = PROJECT_DIR / "data" / "boundary" / "southern_thailand_tambon_points.csv"
 OUTPUT_DIR = PROJECT_DIR / "results" / "live_forecast"
 GFS_ASSET = "NOAA/GFS0P25"
