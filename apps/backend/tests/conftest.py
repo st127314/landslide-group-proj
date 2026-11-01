@@ -49,6 +49,9 @@ _write("models/susceptibility/landslide_sample_susceptibility_scores.csv",
 _write("results/susceptibility_map/susceptibility_grid_points.csv",
        "px_lon,px_lat,raw_probability,calibrated_probability,susceptibility_class,above_threshold\n"
        "99.00,8.00,0.9,0.9,very_high,1\n99.10,8.10,0.1,0.05,very_low,0\n99.20,8.20,0.5,0.5,moderate,1\n")
+(ROOT / "results/susceptibility_map/susceptibility_web.png").write_bytes(b"\x89PNG\r\n\x1a\n")
+_write("results/susceptibility_map/susceptibility_web.json",
+       {"coordinates": [[98.9, 8.3], [99.3, 8.3], [99.3, 7.9], [98.9, 7.9]], "width": 2, "height": 2, "cell_m": 250})
 _write("results/susceptibility_map/susceptibility_map_metadata.json", {"point_count": 3, "class_counts": {"very_high": 1}})
 _write("results/live_forecast/latest.json", {
     "generated_utc": "2026-01-01T07:00:00+00:00", "gfs_run_utc": "2026-01-01T00:00:00+00:00",

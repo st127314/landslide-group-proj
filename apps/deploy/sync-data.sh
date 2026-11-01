@@ -25,6 +25,8 @@ FILES=(
   "models/susceptibility/landslide_sample_susceptibility_scores.csv"
   "results/susceptibility_map/susceptibility_grid_points.csv"
   "results/susceptibility_map/susceptibility_map_metadata.json"
+  "results/susceptibility_map/susceptibility_web.png"    # from scripts/make_susceptibility_png.py
+  "results/susceptibility_map/susceptibility_web.json"
   "results/live_forecast/latest.json"
   "results/impact_overlay/impact_overlay.json"
 )

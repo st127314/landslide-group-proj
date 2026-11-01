@@ -72,8 +72,6 @@ export default function ImpactMap() {
   });
   const [buildingsTruncated, setBuildingsTruncated] = useState(false);
   const [buildingsCount, setBuildingsCount] = useState(0);
-  const [gridTruncated, setGridTruncated] = useState(false);
-  const [gridCount, setGridCount] = useState(0);
   const [selected, setSelected] = useState<Record<string, unknown> | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -96,25 +94,6 @@ export default function ImpactMap() {
     }
   }, []);
 
-  const refreshSusceptibilityGrid = useCallback(async () => {
-    const map = mapRef.current;
-    if (!map || !map.getSource("susceptibility-grid")) return;
-    const bounds = map.getBounds();
-    try {
-      const data = await api.susceptibilityGrid(
-        [bounds.getWest(), bounds.getSouth(), bounds.getEast(), bounds.getNorth()],
-        8000
-      );
-      (map.getSource("susceptibility-grid") as maplibregl.GeoJSONSource).setData(
-        data as unknown as GeoJSON.FeatureCollection
-      );
-      setGridTruncated(data.truncated);
-      setGridCount(data.features.length);
-    } catch {
-      // Viewport too large / API unreachable (e.g. map not built yet) -- leave last good data.
-    }
-  }, []);
-
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
 
@@ -130,7 +109,11 @@ export default function ImpactMap() {
     map.on("load", async () => {
       try {
         // The training/test samples (~2.7 MB) are off by default, so they are fetched only when switched on.
-        const [boundary, facilities] = await Promise.all([api.boundary(), api.facilities()]);
+        const [boundary, facilities, raster] = await Promise.all([
+          api.boundary(),
+          api.facilities(),
+          api.susceptibilityRaster(),
+        ]);
 
         map.addSource("boundary", { type: "geojson", data: boundary as unknown as GeoJSON.FeatureCollection });
         map.addLayer({
@@ -140,21 +123,20 @@ export default function ImpactMap() {
           paint: { "line-color": "#18181b", "line-width": 1.5 },
         });
 
-        map.addSource("susceptibility-grid", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
+        // The 250 m map is one pre-coloured PNG (scripts/make_susceptibility_png.py), drawn under the boundary.
+        map.addSource("susceptibility-raster", {
+          type: "image",
+          url: api.susceptibilityRasterUrl(),
+          coordinates: raster.coordinates as [
+            [number, number], [number, number], [number, number], [number, number],
+          ],
+        });
         map.addLayer(
           {
-            id: "susceptibility-grid-points",
-            type: "circle",
-            source: "susceptibility-grid",
-            paint: {
-              "circle-radius": 5,
-              "circle-blur": 0.6,
-              "circle-color": [
-                "interpolate", ["linear"], ["get", "calibrated_probability"],
-                ...SCORE_COLOR_STOPS.flat(),
-              ],
-              "circle-opacity": 0.55,
-            },
+            id: "susceptibility-raster",
+            type: "raster",
+            source: "susceptibility-raster",
+            paint: { "raster-opacity": 0.7, "raster-resampling": "nearest", "raster-fade-duration": 0 },
           },
           "boundary-line"
         );
@@ -216,9 +198,18 @@ export default function ImpactMap() {
           },
         });
 
-        map.on("click", "susceptibility-grid-points", (e) => {
-          const f = e.features?.[0];
-          if (f) setSelected({ layer: "Susceptibility map (250m grid)", ...f.properties });
+        // A raster has no features to click, so a click that misses every vector layer asks the API for the
+        // score of the nearest grid cell.
+        const vectorLayers = ["susceptibility-points", "facilities-points", "buildings-fill"];
+        map.on("click", async (e) => {
+          if (map.getLayoutProperty("susceptibility-raster", "visibility") === "none") return;
+          if (map.queryRenderedFeatures(e.point, { layers: vectorLayers }).length) return;
+          try {
+            const cell = await api.susceptibilityAt(+e.lngLat.lng.toFixed(5), +e.lngLat.lat.toFixed(5));
+            setSelected({ layer: "Susceptibility map (250m grid)", ...cell });
+          } catch {
+            // Outside the study area.
+          }
         });
         map.on("click", "susceptibility-points", (e) => {
           const f = e.features?.[0];
@@ -232,15 +223,13 @@ export default function ImpactMap() {
           const f = e.features?.[0];
           if (f) setSelected({ layer: "Building", ...f.properties });
         });
-        for (const id of ["susceptibility-grid-points", "susceptibility-points", "facilities-points", "buildings-fill"]) {
+        for (const id of vectorLayers) {
           map.on("mouseenter", id, () => (map.getCanvas().style.cursor = "pointer"));
           map.on("mouseleave", id, () => (map.getCanvas().style.cursor = ""));
         }
 
         map.on("moveend", refreshBuildings);
-        map.on("moveend", refreshSusceptibilityGrid);
         refreshBuildings();
-        refreshSusceptibilityGrid();
       } catch (e) {
         setLoadError(e instanceof Error ? e.message : String(e));
       }
@@ -276,8 +265,8 @@ export default function ImpactMap() {
     if (!map) return;
     const visibility = (on: boolean) => (on ? "visible" : "none");
     if (map.getLayer("boundary-line")) map.setLayoutProperty("boundary-line", "visibility", visibility(layers.boundary));
-    if (map.getLayer("susceptibility-grid-points"))
-      map.setLayoutProperty("susceptibility-grid-points", "visibility", visibility(layers.susceptibilityGrid));
+    if (map.getLayer("susceptibility-raster"))
+      map.setLayoutProperty("susceptibility-raster", "visibility", visibility(layers.susceptibilityGrid));
     if (map.getLayer("susceptibility-points"))
       map.setLayoutProperty("susceptibility-points", "visibility", visibility(layers.susceptibility));
     if (map.getLayer("facilities-points"))
@@ -310,10 +299,20 @@ export default function ImpactMap() {
           </label>
         ))}
         {layers.susceptibilityGrid && (
-          <p className="mt-2 text-xs text-zinc-500">
-            Showing {gridCount.toLocaleString()} of ~1.14M grid points in view
-            {gridTruncated ? " (capped — zoom in for all)" : ""}.
-          </p>
+          <div className="mt-2 text-xs text-zinc-500">
+            <div
+              className="h-2 w-full rounded"
+              style={{
+                background: `linear-gradient(to right, ${SCORE_COLOR_STOPS.map(([v, c]) => `${c} ${v * 100}%`).join(", ")})`,
+              }}
+            />
+            <div className="mt-0.5 flex justify-between">
+              <span>low</span>
+              <span>relative susceptibility</span>
+              <span>high</span>
+            </div>
+            <p className="mt-1">Click the map for the score of a 250 m cell.</p>
+          </div>
         )}
         {layers.buildings && (
           <p className="mt-1 text-xs text-zinc-500">

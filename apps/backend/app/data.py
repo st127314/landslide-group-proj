@@ -202,10 +202,31 @@ class _SusceptibilityGridIndex:
         ]
         return features, truncated
 
+    def nearest(self, lon, lat, max_deg=0.004):
+        """The grid cell closest to (lon, lat), or None when nothing lies within ~400 m (sea, outside the area)."""
+        near = np.nonzero((np.abs(self.lon - lon) <= max_deg) & (np.abs(self.lat - lat) <= max_deg))[0]
+        if not len(near):
+            return None
+        i = near[np.argmin((self.lon[near] - lon) ** 2 + (self.lat[near] - lat) ** 2)]
+        c = int(self.cls[i])
+        return {"lon": round(float(self.lon[i]), 5), "lat": round(float(self.lat[i]), 5),
+                "calibrated_probability": round(float(self.calibrated[i]), 3),
+                "susceptibility_class": self.CLASSES[c] if c >= 0 else None}
+
 
 @lru_cache(maxsize=1)
 def susceptibility_grid_index():
     return _SusceptibilityGridIndex(paths.SUSCEPTIBILITY_GRID_CSV)
+
+
+@lru_cache(maxsize=1)
+def susceptibility_png():
+    return _read_bytes(paths.SUSCEPTIBILITY_PNG)
+
+
+@lru_cache(maxsize=1)
+def susceptibility_png_bounds():
+    return _read_bytes(paths.SUSCEPTIBILITY_PNG_BOUNDS)
 
 
 @lru_cache(maxsize=1)

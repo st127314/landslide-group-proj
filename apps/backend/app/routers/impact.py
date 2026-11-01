@@ -10,8 +10,8 @@ router = APIRouter(prefix="/api/impact", tags=["impact"])
 STATIC_CACHE = {"Cache-Control": "public, max-age=3600, s-maxage=86400"}
 
 
-def _static(body):
-    return Response(content=body, media_type="application/json", headers=STATIC_CACHE)
+def _static(body, media_type="application/json"):
+    return Response(content=body, media_type=media_type, headers=STATIC_CACHE)
 
 DEFAULT_BUILDINGS_LIMIT = 5000
 MAX_BUILDINGS_LIMIT = 20000
@@ -88,6 +88,39 @@ def susceptibility_grid(
     features, truncated = index.query((min_lon, min_lat, max_lon, max_lat), limit)
     body = orjson.dumps({"type": "FeatureCollection", "features": features, "truncated": truncated})
     return _static(body)
+
+
+@router.get("/susceptibility-raster.png")
+def susceptibility_raster_png():
+    """The 250 m susceptibility map as one coloured, transparent PNG in Web Mercator (scripts/make_susceptibility_png.py).
+    The browser draws it as an image layer, so panning costs the server nothing; a .png path is also cached by
+    Cloudflare without any extra rule."""
+    body = data.susceptibility_png()
+    if body is None:
+        raise HTTPException(status_code=404, detail="Susceptibility PNG not found. Run scripts/make_susceptibility_png.py.")
+    return _static(body, "image/png")
+
+
+@router.get("/susceptibility-raster.json")
+def susceptibility_raster_bounds():
+    """Corner coordinates (top-left, top-right, bottom-right, bottom-left) for placing the PNG on the map."""
+    body = data.susceptibility_png_bounds()
+    if body is None:
+        raise HTTPException(status_code=404, detail="Susceptibility PNG not found. Run scripts/make_susceptibility_png.py.")
+    return _static(body)
+
+
+@router.get("/susceptibility-at")
+def susceptibility_at(lon: float = Query(..., ge=-180, le=180), lat: float = Query(..., ge=-90, le=90)):
+    """Score of the grid cell nearest a clicked point, for the map pop-up."""
+    index = data.susceptibility_grid_index()
+    if not index.loaded:
+        raise HTTPException(status_code=404,
+                            detail="Susceptibility grid not found. Run scripts/predict_susceptibility_grid.py first.")
+    cell = index.nearest(lon, lat)
+    if cell is None:
+        raise HTTPException(status_code=404, detail="No grid cell within ~400 m of this point.")
+    return _static(orjson.dumps(cell))
 
 
 @router.get("/susceptibility-grid/metadata")

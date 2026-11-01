@@ -45,6 +45,16 @@ def test_susceptibility_grid_bbox_query():
     assert client.get("/api/impact/susceptibility-grid/metadata").json()["point_count"] == 3
 
 
+def test_susceptibility_raster_and_point_lookup():
+    png = client.get("/api/impact/susceptibility-raster.png")
+    assert png.status_code == 200 and png.headers["content-type"] == "image/png"
+    assert "max-age" in png.headers["cache-control"]
+    assert len(client.get("/api/impact/susceptibility-raster.json").json()["coordinates"]) == 4
+    cell = client.get("/api/impact/susceptibility-at?lon=99.101&lat=8.099").json()
+    assert cell["susceptibility_class"] == "very_low" and cell["lon"] == 99.1
+    assert client.get("/api/impact/susceptibility-at?lon=105&lat=1").status_code == 404
+
+
 def test_overlay_and_live_forecast():
     assert set(client.get("/api/impact/overlay").json()) == {"metadata", "tambons", "provinces"}
     forecast = client.get("/api/impact/live-forecast").json()

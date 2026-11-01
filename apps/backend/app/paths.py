@@ -28,6 +28,8 @@ SUSCEPTIBILITY_SCORES_CSV = MODEL_ARTIFACTS_DIR / "landslide_sample_susceptibili
 SUSCEPTIBILITY_MAP_DIR = RESULTS_DIR / "susceptibility_map"
 SUSCEPTIBILITY_GRID_CSV = SUSCEPTIBILITY_MAP_DIR / "susceptibility_grid_points.csv"
 SUSCEPTIBILITY_MAP_METADATA_PATH = SUSCEPTIBILITY_MAP_DIR / "susceptibility_map_metadata.json"
+SUSCEPTIBILITY_PNG = SUSCEPTIBILITY_MAP_DIR / "susceptibility_web.png"  # from scripts/make_susceptibility_png.py
+SUSCEPTIBILITY_PNG_BOUNDS = SUSCEPTIBILITY_MAP_DIR / "susceptibility_web.json"
 
 
 

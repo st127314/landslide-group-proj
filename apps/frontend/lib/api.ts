@@ -258,6 +258,19 @@ export const api = {
       undefined,
       "default"
     ),
+  susceptibilityRaster: () =>
+    getJSON<{ coordinates: [number, number][]; width: number; height: number; cell_m: number }>(
+      "/api/impact/susceptibility-raster.json",
+      undefined,
+      "default"
+    ),
+  susceptibilityRasterUrl: () => `${API_URL}/api/impact/susceptibility-raster.png`,
+  susceptibilityAt: (lon: number, lat: number) =>
+    getJSON<{ lon: number; lat: number; calibrated_probability: number; susceptibility_class: string | null }>(
+      `/api/impact/susceptibility-at?lon=${lon}&lat=${lat}`,
+      undefined,
+      "default"
+    ),
   impactOverlay: () => getJSON<ImpactOverlay>("/api/impact/overlay"),
   scenario: (rain24hMm: number | null, province: string | null, limit = 15, signal?: AbortSignal) => {
     const q = new URLSearchParams({ limit: String(limit) });
