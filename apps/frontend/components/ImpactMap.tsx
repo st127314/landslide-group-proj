@@ -10,6 +10,9 @@ import { api } from "@/lib/api";
 // fine for this scaffold; swap for your own style/tile source in production.
 const BASE_STYLE = "https://demotiles.maplibre.org/style.json";
 
+// Served from public/ (copied there by scripts/copy-maplibre-worker.mjs): the bundle does not ship the worker.
+maplibregl.setWorkerUrl("/maplibre-gl-worker.mjs");
+
 const STUDY_AREA_CENTER: [number, number] = [100.0, 8.2];
 const STUDY_AREA_ZOOM = 6.3;
 
@@ -126,11 +129,8 @@ export default function ImpactMap() {
 
     map.on("load", async () => {
       try {
-        const [boundary, susceptibility, facilities] = await Promise.all([
-          api.boundary(),
-          api.susceptibility(),
-          api.facilities(),
-        ]);
+        // The training/test samples (~2.7 MB) are off by default, so they are fetched only when switched on.
+        const [boundary, facilities] = await Promise.all([api.boundary(), api.facilities()]);
 
         map.addSource("boundary", { type: "geojson", data: boundary as unknown as GeoJSON.FeatureCollection });
         map.addLayer({
@@ -159,14 +159,12 @@ export default function ImpactMap() {
           "boundary-line"
         );
 
-        map.addSource("susceptibility", {
-          type: "geojson",
-          data: susceptibility as unknown as GeoJSON.FeatureCollection,
-        });
+        map.addSource("susceptibility", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
         map.addLayer({
           id: "susceptibility-points",
           type: "circle",
           source: "susceptibility",
+          layout: { visibility: "none" },
           paint: {
             "circle-radius": 3.5,
             "circle-color": [
@@ -254,6 +252,24 @@ export default function ImpactMap() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const samplesLoaded = useRef(false);
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!layers.susceptibility || samplesLoaded.current || !map?.getSource("susceptibility")) return;
+    samplesLoaded.current = true;
+    api
+      .susceptibility()
+      .then((data) =>
+        (map.getSource("susceptibility") as maplibregl.GeoJSONSource).setData(
+          data as unknown as GeoJSON.FeatureCollection
+        )
+      )
+      .catch((e) => {
+        samplesLoaded.current = false;
+        setLoadError(e instanceof Error ? e.message : String(e));
+      });
+  }, [layers.susceptibility]);
 
   useEffect(() => {
     const map = mapRef.current;

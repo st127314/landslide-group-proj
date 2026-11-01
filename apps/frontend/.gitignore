@@ -12,3 +12,6 @@ next-env.d.ts
 # misc
 *.log
 .DS_Store
+
+# copied from node_modules by scripts/copy-maplibre-worker.mjs
+/public/maplibre-gl-worker.mjs

@@ -1,8 +1,17 @@
-from fastapi import APIRouter, HTTPException, Query
+import orjson
+from fastapi import APIRouter, HTTPException, Query, Response
 
 from .. import data, scenario as scenario_logic
 
 router = APIRouter(prefix="/api/impact", tags=["impact"])
+
+# Static layers only change when new data is synced and the API restarted, so browsers and the Cloudflare edge may
+# keep them for a day; that takes repeat requests off the small server entirely.
+STATIC_CACHE = {"Cache-Control": "public, max-age=3600, s-maxage=86400"}
+
+
+def _static(body):
+    return Response(content=body, media_type="application/json", headers=STATIC_CACHE)
 
 DEFAULT_BUILDINGS_LIMIT = 5000
 MAX_BUILDINGS_LIMIT = 20000
@@ -13,7 +22,7 @@ def boundary():
     geojson = data.boundary_geojson()
     if geojson is None:
         raise HTTPException(status_code=404, detail="Boundary file not found.")
-    return geojson
+    return _static(geojson)
 
 
 @router.get("/susceptibility")
@@ -25,7 +34,7 @@ def susceptibility():
     geojson = data.susceptibility_geojson()
     if geojson is None:
         raise HTTPException(status_code=404, detail="Susceptibility scores not found. Run the modeling notebook first.")
-    return geojson
+    return _static(geojson)
 
 
 @router.get("/facilities")
@@ -33,7 +42,7 @@ def facilities():
     geojson = data.facilities_geojson()
     if geojson is None:
         raise HTTPException(status_code=404, detail="Facilities layer not found. Run download_external_data.py first.")
-    return geojson
+    return _static(geojson)
 
 
 @router.get("/buildings")
@@ -77,7 +86,8 @@ def susceptibility_grid(
         raise HTTPException(status_code=404,
                             detail="Susceptibility grid not found. Run scripts/predict_susceptibility_grid.py first.")
     features, truncated = index.query((min_lon, min_lat, max_lon, max_lat), limit)
-    return {"type": "FeatureCollection", "features": features, "truncated": truncated}
+    body = orjson.dumps({"type": "FeatureCollection", "features": features, "truncated": truncated})
+    return _static(body)
 
 
 @router.get("/susceptibility-grid/metadata")
@@ -95,7 +105,7 @@ def tambons():
     geojson = data.tambon_boundary_geojson()
     if geojson is None:
         raise HTTPException(status_code=404, detail="Tambon boundary not found. Run scripts/clip_tambon_boundaries.py first.")
-    return geojson
+    return _static(geojson)
 
 
 @router.get("/live-forecast")

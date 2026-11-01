@@ -29,9 +29,16 @@ SUSCEPTIBILITY_MAP_DIR = RESULTS_DIR / "susceptibility_map"
 SUSCEPTIBILITY_GRID_CSV = SUSCEPTIBILITY_MAP_DIR / "susceptibility_grid_points.csv"
 SUSCEPTIBILITY_MAP_METADATA_PATH = SUSCEPTIBILITY_MAP_DIR / "susceptibility_map_metadata.json"
 
-BOUNDARY_PATH = BOUNDARY_DIR / "southern_thailand.geojson"
+
+
+def _web_layer(slim, full):
+    """The slimmed copy from scripts/make_web_layers.py when present, else the full source layer."""
+    return slim if slim.exists() else full
+
+
+BOUNDARY_PATH = _web_layer(BOUNDARY_DIR / "southern_thailand_web.geojson", BOUNDARY_DIR / "southern_thailand.geojson")
 BUILDINGS_PATH = EXTERNAL_DIR / "buildings_aoi.geojson"
-FACILITIES_PATH = EXTERNAL_DIR / "facilities_aoi.geojson"
+FACILITIES_PATH = _web_layer(EXTERNAL_DIR / "facilities_web.geojson", EXTERNAL_DIR / "facilities_aoi.geojson")
 WORLDPOP_MANIFEST_PATH = EXTERNAL_DIR / "worldpop_manifest.json"
 EXTERNAL_MANIFEST_PATH = EXTERNAL_DIR / "manifest.json"
 

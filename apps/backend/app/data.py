@@ -26,40 +26,66 @@ def model_metadata():
     return _read_json(paths.MODEL_METADATA_PATH)
 
 
+def _read_bytes(path):
+    """Static layers are served exactly as stored (already minified by scripts/make_web_layers.py), so the API keeps
+    one bytes copy instead of a parsed dict plus a re-serialisation on every request."""
+    return path.read_bytes() if path.exists() else None
+
+
+# Only what the map draws or shows in its pop-up; final_model_insample_score is left out because it is the
+# in-sample score of the refitted model, not a held-out estimate.
+SAMPLE_COLUMNS = ["id", "event_date", "landslide", "split", "heldout_score", "relative_score_class"]
+
+
 @lru_cache(maxsize=1)
-def susceptibility_geojson():
-    """Point-level susceptibility scores (training OOF + held-out test rows),
-    as a GeoJSON FeatureCollection -- not the full raster map (still pending;
-    see /api/status)."""
+def _susceptibility_samples():
     if not paths.SUSCEPTIBILITY_SCORES_CSV.exists():
         return None
     df = pd.read_csv(paths.SUSCEPTIBILITY_SCORES_CSV)
+    df["heldout_score"] = df["heldout_score"].round(3)
+    columns = [c for c in SAMPLE_COLUMNS if c in df.columns]
+    lon, lat = df["longitude"].round(5).tolist(), df["latitude"].round(5).tolist()
     # Standard JSON has no NaN; e.g. heldout_score is NaN for rows outside
     # that row's own CV/test split. object dtype so None survives, not "nan".
-    df = df.astype(object).where(pd.notna(df), None)
-    features = []
-    for row in df.to_dict(orient="records"):
-        lon, lat = row.pop("longitude"), row.pop("latitude")
-        features.append({
-            "type": "Feature",
-            "geometry": {"type": "Point", "coordinates": [lon, lat]},
-            "properties": row,
-        })
-    return {"type": "FeatureCollection", "features": features}
+    records = df[columns].astype(object).where(pd.notna(df[columns]), None).to_dict(orient="records")
+    features = [{"type": "Feature", "geometry": {"type": "Point", "coordinates": [x, y]}, "properties": props}
+                for x, y, props in zip(lon, lat, records)]
+    counts = df["landslide"].value_counts().to_dict()
+    return orjson.dumps({"type": "FeatureCollection", "features": features}), counts
+
+
+def susceptibility_geojson():
+    """Point-level susceptibility scores (training OOF + held-out test rows) as GeoJSON bytes -- the
+    sampled inventory, not the 250 m map (see susceptibility_grid_index)."""
+    samples = _susceptibility_samples()
+    return samples[0] if samples else None
+
+
+def susceptibility_sample_counts():
+    """{1: landslide rows, 0: non-landslide rows}, or None when the scores file is missing."""
+    samples = _susceptibility_samples()
+    return samples[1] if samples else None
 
 
 @lru_cache(maxsize=1)
 def boundary_geojson():
-    if not paths.BOUNDARY_PATH.exists():
-        return None
-    return _read_json(paths.BOUNDARY_PATH)
+    return _read_bytes(paths.BOUNDARY_PATH)
 
 
 @lru_cache(maxsize=1)
 def facilities_geojson():
+    return _read_bytes(paths.FACILITIES_PATH)
+
+
+@lru_cache(maxsize=1)
+def facility_breakdown():
     if not paths.FACILITIES_PATH.exists():
         return None
-    return _read_json(paths.FACILITIES_PATH)
+    counts = {}
+    for feature in _read_json(paths.FACILITIES_PATH)["features"]:
+        fclass = feature["properties"].get("fclass") or "other"
+        counts[fclass] = counts.get(fclass, 0) + 1
+    return counts
 
 
 @lru_cache(maxsize=1)
@@ -136,17 +162,21 @@ class _SusceptibilityGridIndex:
     Like buildings, never served unfiltered -- /api/impact/susceptibility-grid
     always requires a bounding box."""
 
+    CLASSES = ["very_low", "low", "moderate", "high", "very_high"]
+
     def __init__(self, path):
         self.loaded = path.exists()
         if not self.loaded:
-            self.lon = self.lat = self.raw = self.calibrated = self.cls = None
+            self.lon = self.lat = self.calibrated = self.cls = None
             return
-        df = pd.read_csv(path)
+        # float32 coordinates (~1 m precision here) and int8 class codes keep the 1.14M points at ~14 MB instead of
+        # ~130 MB with float64 and a Python string per row; the server has under 1 GB of RAM.
+        df = pd.read_csv(path, usecols=["px_lon", "px_lat", "calibrated_probability", "susceptibility_class"],
+                         dtype={"px_lon": np.float32, "px_lat": np.float32, "calibrated_probability": np.float32})
         self.lon = df["px_lon"].to_numpy()
         self.lat = df["px_lat"].to_numpy()
-        self.raw = df["raw_probability"].to_numpy()
         self.calibrated = df["calibrated_probability"].to_numpy()
-        self.cls = df["susceptibility_class"].to_numpy()
+        self.cls = pd.Categorical(df["susceptibility_class"], categories=self.CLASSES).codes.astype(np.int8)
 
     def query(self, bbox, limit):
         min_lon, min_lat, max_lon, max_lat = bbox
@@ -158,17 +188,17 @@ class _SusceptibilityGridIndex:
             # Even stride rather than a prefix, so a zoomed-out view isn't
             # biased toward one corner of the viewport.
             idx = idx[:: max(1, len(idx) // limit)][:limit]
+        lon = np.round(self.lon[idx].astype(np.float64), 5).tolist()
+        lat = np.round(self.lat[idx].astype(np.float64), 5).tolist()
+        prob = np.round(self.calibrated[idx].astype(np.float64), 3).tolist()
         features = [
             {
                 "type": "Feature",
-                "geometry": {"type": "Point", "coordinates": [float(self.lon[i]), float(self.lat[i])]},
-                "properties": {
-                    "raw_probability": float(self.raw[i]),
-                    "calibrated_probability": float(self.calibrated[i]),
-                    "susceptibility_class": str(self.cls[i]),
-                },
+                "geometry": {"type": "Point", "coordinates": [x, y]},
+                "properties": {"calibrated_probability": p,
+                               "susceptibility_class": self.CLASSES[c] if c >= 0 else None},
             }
-            for i in idx
+            for x, y, p, c in zip(lon, lat, prob, self.cls[idx].tolist())
         ]
         return features, truncated
 
@@ -180,9 +210,7 @@ def susceptibility_grid_index():
 
 @lru_cache(maxsize=1)
 def tambon_boundary_geojson():
-    if not paths.TAMBON_BOUNDARY_PATH.exists():
-        return None
-    return _read_json(paths.TAMBON_BOUNDARY_PATH)
+    return _read_bytes(paths.TAMBON_BOUNDARY_PATH)
 
 
 def live_forecast_data():

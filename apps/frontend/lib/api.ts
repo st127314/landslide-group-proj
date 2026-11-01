@@ -1,6 +1,5 @@
-// Thin typed client for apps/backend's read-only API. No caching beyond
-// Next.js's own fetch defaults -- the backend itself caches pipeline outputs
-// in memory, so repeat calls are cheap.
+// Thin typed client for apps/backend's read-only API. Live data (forecast, overlay, scenario) is never cached;
+// the static map layers use the browser's HTTP cache, following the backend's Cache-Control headers.
 
 // Browser: NEXT_PUBLIC_API_URL (baked in at build time; set it to "" to call the same origin,
 // e.g. behind a reverse proxy that routes /api to the backend).
@@ -11,8 +10,8 @@ const API_URL =
     ? (process.env.INTERNAL_API_URL ?? PUBLIC_API_URL)
     : PUBLIC_API_URL;
 
-async function getJSON<T>(path: string, signal?: AbortSignal): Promise<T> {
-  const res = await fetch(`${API_URL}${path}`, { cache: "no-store", signal });
+async function getJSON<T>(path: string, signal?: AbortSignal, cache: RequestCache = "no-store"): Promise<T> {
+  const res = await fetch(`${API_URL}${path}`, { cache, signal });
   if (!res.ok) {
     throw new Error(`${path} -> HTTP ${res.status}`);
   }
@@ -245,9 +244,9 @@ export const api = {
   status: () => getJSON<PipelineStatus>("/api/status"),
   model: () => getJSON<ModelMetadata>("/api/model"),
   modelComparison: () => getJSON<ModelComparison>("/api/model/comparison"),
-  boundary: () => getJSON<GeoJSONFeatureCollection>("/api/impact/boundary"),
-  susceptibility: () => getJSON<GeoJSONFeatureCollection>("/api/impact/susceptibility"),
-  facilities: () => getJSON<GeoJSONFeatureCollection>("/api/impact/facilities"),
+  boundary: () => getJSON<GeoJSONFeatureCollection>("/api/impact/boundary", undefined, "default"),
+  susceptibility: () => getJSON<GeoJSONFeatureCollection>("/api/impact/susceptibility", undefined, "default"),
+  facilities: () => getJSON<GeoJSONFeatureCollection>("/api/impact/facilities", undefined, "default"),
   population: () => getJSON<WorldPopManifest>("/api/impact/population"),
   buildings: (bbox: [number, number, number, number], limit = 5000) =>
     getJSON<GeoJSONFeatureCollection & { truncated: boolean }>(
@@ -255,7 +254,9 @@ export const api = {
     ),
   susceptibilityGrid: (bbox: [number, number, number, number], limit = 8000) =>
     getJSON<GeoJSONFeatureCollection & { truncated: boolean }>(
-      `/api/impact/susceptibility-grid?min_lon=${bbox[0]}&min_lat=${bbox[1]}&max_lon=${bbox[2]}&max_lat=${bbox[3]}&limit=${limit}`
+      `/api/impact/susceptibility-grid?min_lon=${bbox[0]}&min_lat=${bbox[1]}&max_lon=${bbox[2]}&max_lat=${bbox[3]}&limit=${limit}`,
+      undefined,
+      "default"
     ),
   impactOverlay: () => getJSON<ImpactOverlay>("/api/impact/overlay"),
   scenario: (rain24hMm: number | null, province: string | null, limit = 15, signal?: AbortSignal) => {
