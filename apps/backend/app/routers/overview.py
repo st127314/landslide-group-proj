@@ -5,6 +5,13 @@ from .. import data, status
 router = APIRouter(prefix="/api/overview", tags=["overview"])
 
 
+def _manifest_building_count():
+    """Small servers skip the 140 MB footprints layer (apps/deploy/sync-data.sh SKIP_BUILDINGS=1); the count is still
+    recorded in data/external/manifest.json by download_external_data.py."""
+    manifest = data.external_manifest() or {}
+    return manifest.get("outputs", {}).get("buildings_aoi", {}).get("features")
+
+
 @router.get("")
 def overview():
     metadata = data.model_metadata()
@@ -23,7 +30,7 @@ def overview():
         "study_area": "Southern Thailand (14 provinces)",
         "landslide_events": int(sample_counts.get(1, 0)) if sample_counts is not None else None,
         "non_landslide_samples": int(sample_counts.get(0, 0)) if sample_counts is not None else None,
-        "buildings_mapped": len(buildings.entries) if buildings.loaded else None,
+        "buildings_mapped": len(buildings.entries) if buildings.loaded else _manifest_building_count(),
         "facilities_mapped": sum(facility_counts.values()) if facility_counts is not None else None,
         "facility_breakdown": facility_counts or {},
         "population_estimate": (worldpop or {}).get("stats", {}).get("total_population"),

@@ -1,5 +1,6 @@
 from fastapi.testclient import TestClient
 
+from app import data
 from app.main import app
 
 client = TestClient(app)
@@ -87,3 +88,12 @@ def test_missing_data_returns_404_not_500(monkeypatch, tmp_path):
 
 def test_api_is_read_only():
     assert client.post("/api/model", json={}).status_code in (405, 403)
+
+
+def test_building_count_falls_back_to_manifest_when_layer_not_loaded(monkeypatch):
+    class NotLoaded:
+        loaded = False
+        entries = []
+    monkeypatch.setattr(data, "buildings_index", lambda: NotLoaded())
+    monkeypatch.setattr(data, "external_manifest", lambda: {"outputs": {"buildings_aoi": {"features": 426519}}})
+    assert client.get("/api/overview").json()["buildings_mapped"] == 426519
