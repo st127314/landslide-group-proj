@@ -26,18 +26,20 @@ TIF_PATH = MAP_DIR / "susceptibility_grid.tif"
 PNG_PATH = MAP_DIR / "susceptibility_web.png"
 BOUNDS_PATH = MAP_DIR / "susceptibility_web.json"
 
-# Same ramp as SCORE_COLOR_STOPS in apps/frontend/components/ImpactMap.tsx, so the legend still matches.
-COLOR_STOPS = [(0.0, "#2563eb"), (0.4, "#eab308"), (0.6, "#f97316"), (0.8, "#dc2626"), (1.0, "#7f1d1d")]
+# The report's five classes: the bins of predict_susceptibility_grid.py (upper edge inclusive, as pd.cut) and the
+# colours of RAMP5 in make_figures.py, so the web map and Figure 1 read the same. Mirrored in ImpactMap.tsx.
+CLASS_EDGES = [0.2, 0.4, 0.6, 0.8]
+CLASS_COLORS = ["#cde2fb", "#86b6ef", "#2a78d6", "#1c5cab", "#104281"]  # very_low .. very_high
 EARTH_RADIUS = 6378137.0
 
 
 def colorize(values):
-    """Linear interpolation between the colour stops, per channel; NaN becomes fully transparent."""
-    stops = np.array([s for s, _ in COLOR_STOPS])
-    rgb = np.array([[int(c[i:i + 2], 16) for i in (1, 3, 5)] for _, c in COLOR_STOPS])
+    """One flat colour per susceptibility class; NaN becomes fully transparent."""
+    rgb = np.array([[int(c[i:i + 2], 16) for i in (1, 3, 5)] for c in CLASS_COLORS], dtype=np.uint8)
     valid = np.isfinite(values)
-    v = np.clip(np.where(valid, values, 0), 0, 1)
-    bands = [np.interp(v, stops, rgb[:, i]).astype(np.uint8) for i in range(3)]
+    # side="left": a score exactly on an edge (0.2) stays in the lower class, matching pd.cut's (a, b] bins.
+    cls = np.searchsorted(CLASS_EDGES, np.where(valid, values, 0), side="left")
+    bands = [rgb[cls, i] for i in range(3)]
     bands.append(np.where(valid, 255, 0).astype(np.uint8))
     return bands
 

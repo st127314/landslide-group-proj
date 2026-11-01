@@ -28,13 +28,16 @@ maplibregl.setWorkerUrl("/maplibre-gl-worker.mjs");
 const STUDY_AREA_CENTER: [number, number] = [100.0, 8.2];
 const STUDY_AREA_ZOOM = 6.3;
 
-const SCORE_COLOR_STOPS: Array<[number, string]> = [
-  [0, "#2563eb"], // low susceptibility
-  [0.4, "#eab308"],
-  [0.6, "#f97316"],
-  [0.8, "#dc2626"],
-  [1, "#7f1d1d"], // very high
+// The report's five susceptibility classes (calibrated score bins and Figure 1 colours); the PNG layer is rendered
+// with the same table in scripts/make_susceptibility_png.py.
+const SUSCEPTIBILITY_CLASSES: Array<{ label: string; range: string; color: string }> = [
+  { label: "Very low", range: "< 0.2", color: "#cde2fb" },
+  { label: "Low", range: "0.2–0.4", color: "#86b6ef" },
+  { label: "Moderate", range: "0.4–0.6", color: "#2a78d6" },
+  { label: "High", range: "0.6–0.8", color: "#1c5cab" },
+  { label: "Very high", range: "≥ 0.8", color: "#104281" },
 ];
+const CLASS_EDGES = [0.2, 0.4, 0.6, 0.8];
 
 const FACILITY_CATEGORY_COLORS: Record<string, string> = {
   hospital: "#dc2626",
@@ -150,7 +153,7 @@ export default function ImpactMap() {
               id: "susceptibility-raster",
               type: "raster",
               source: "susceptibility-raster",
-              paint: { "raster-opacity": 0.7, "raster-resampling": "nearest", "raster-fade-duration": 0 },
+              paint: { "raster-opacity": 0.75, "raster-resampling": "nearest", "raster-fade-duration": 0 },
             },
             "boundary-line"
           );
@@ -168,11 +171,13 @@ export default function ImpactMap() {
               "case",
               ["==", ["get", "heldout_score"], null],
               "#a1a1aa", // no held-out score (embargoed row) -- shown but greyed out
+              // Same bins as the map; "step" puts a score exactly on an edge in the upper class, which only differs
+              // from the report's (a, b] bins for scores of exactly 0.2/0.4/0.6/0.8.
               [
-                "interpolate",
-                ["linear"],
+                "step",
                 ["coalesce", ["get", "heldout_score"], 0],
-                ...SCORE_COLOR_STOPS.flat(),
+                SUSCEPTIBILITY_CLASSES[0].color,
+                ...CLASS_EDGES.flatMap((edge, i) => [edge, SUSCEPTIBILITY_CLASSES[i + 1].color]),
               ],
             ],
             "circle-opacity": 0.75,
@@ -316,17 +321,14 @@ export default function ImpactMap() {
         ))}
         {layers.susceptibilityGrid && (
           <div className="mt-2 text-xs text-zinc-500">
-            <div
-              className="h-2 w-full rounded"
-              style={{
-                background: `linear-gradient(to right, ${SCORE_COLOR_STOPS.map(([v, c]) => `${c} ${v * 100}%`).join(", ")})`,
-              }}
-            />
-            <div className="mt-0.5 flex justify-between">
-              <span>low</span>
-              <span>relative susceptibility</span>
-              <span>high</span>
-            </div>
+            <p className="mb-1 font-medium text-zinc-600 dark:text-zinc-300">Susceptibility class (calibrated score)</p>
+            {SUSCEPTIBILITY_CLASSES.map((c) => (
+              <div key={c.label} className="flex items-center gap-2 py-px">
+                <span className="inline-block h-3 w-4 rounded-sm" style={{ background: c.color }} />
+                <span className="w-16">{c.label}</span>
+                <span className="text-zinc-400">{c.range}</span>
+              </div>
+            ))}
             <p className="mt-1">Click the map for the score of a 250 m cell.</p>
           </div>
         )}
