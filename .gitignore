@@ -21,6 +21,7 @@
 !/data/processed/landslide_event_antecedent_rainfall.csv
 !/data/processed/non_landslide_event_antecedent_rainfall.csv
 !/data/processed/landslide_event_factors_cleaning_report.txt
+!/data/processed/legacy_random_negatives_factors_cleaned.csv
 !/docs/
 !/scripts/
 !/requirements.txt

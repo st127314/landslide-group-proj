@@ -48,6 +48,18 @@
    "auc_mean": 0.9239,
    "auc_sd": 0.0496,
    "pr_mean": 0.8997
+  },
+  "frequency_ratio": {
+   "auc_folds": [
+    0.8527,
+    0.9315,
+    0.9406,
+    0.8649,
+    0.9497
+   ],
+   "auc_mean": 0.9079,
+   "auc_sd": 0.0455,
+   "pr_mean": 0.8847
   }
  },
  "E1": {
@@ -619,6 +631,32 @@
     "auc_mean": 0.9262,
     "auc_sd": 0.0282,
     "pr_mean": 0.9014
+   }
+  },
+  "terrain_plus_group": {
+   "hydrology": {
+    "random (v1)": 0.9173,
+    "paired (current)": 0.9248
+   },
+   "soil": {
+    "random (v1)": 0.9148,
+    "paired (current)": 0.925
+   },
+   "ndvi": {
+    "random (v1)": 0.9429,
+    "paired (current)": 0.9412
+   },
+   "land_cover": {
+    "random (v1)": 0.9173,
+    "paired (current)": 0.9265
+   },
+   "lithology": {
+    "random (v1)": 0.9117,
+    "paired (current)": 0.9227
+   },
+   "distances": {
+    "random (v1)": 0.9292,
+    "paired (current)": 0.9219
    }
   }
  },

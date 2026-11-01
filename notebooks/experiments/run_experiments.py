@@ -9,8 +9,9 @@ Run from the project root:
 
 Inputs: data/processed/landslide_event_factors_cleaned.csv; results/experiments/province.csv (province of each
 point, from a spatial join with the province boundaries); for E4, the earlier dataset with randomly placed
-negatives (path in V1_TABLE, set the environment variable V1_TABLE to point elsewhere); for the error analysis,
-models/susceptibility/ and results/susceptibility_map/ produced by the notebook and predict_susceptibility_grid.py.
+negatives (data/processed/legacy_random_negatives_factors_cleaned.csv); for the error analysis and calibration,
+models/susceptibility/ produced by the notebook; for the held-out decision value, the 250 m factor grid
+(set FACTOR_GRID to its folder; that step is skipped if the grid is not available).
 Outputs: results/experiments/results.json and results/experiments/errors.json.
 """
 import json, os, sys, time, warnings
@@ -33,7 +34,8 @@ import joblib
 warnings.filterwarnings('ignore')
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / 'results' / 'experiments'
-V1_TABLE = Path(os.environ.get('V1_TABLE', ROOT.parent / 'group_proj_archive/superseded_v1/processed/landslide_event_factors_cleaned.csv'))
+V1_TABLE = ROOT / 'data/processed/legacy_random_negatives_factors_cleaned.csv'
+FACTOR_GRID = Path(os.environ.get('FACTOR_GRID', ROOT / 'data/processed/factor_grid_points'))
 sys.path.insert(0, str(ROOT / 'notebooks'))
 from susc_utils import add_aspect_features, IQRClipper
 
@@ -88,7 +90,41 @@ def model(name, feats, **kw):
     return Pipeline([('prep', prep(feats, **kw)), ('m', m)])
 
 
+class FrequencyRatio:
+    """Frequency-ratio baseline: each factor is binned (numeric factors into training deciles, categorical factors
+    by class); a bin's ratio is its share among landslides over its share among non-landslides, and a location's
+    score is the sum of the log ratios of its bins."""
+    def __init__(self, feats, bins=10):
+        self.feats, self.bins = feats, bins
+
+    def _bin(self, X, f):
+        if f in CAT_ALL:
+            return X[f].astype(str).fillna('missing')
+        return pd.cut(X[f], self.edges_[f], include_lowest=True).astype(str).fillna('missing')
+
+    def fit(self, X, y):
+        self.edges_, self.table_ = {}, {}
+        y = np.asarray(y)
+        for f in self.feats:
+            if f not in CAT_ALL:
+                edges = np.unique(np.nanquantile(X[f], np.linspace(0, 1, self.bins + 1)))
+                edges[0], edges[-1] = -np.inf, np.inf
+                self.edges_[f] = edges
+            b = self._bin(X, f)
+            pos = b[y == 1].value_counts() + 1
+            neg = b[y == 0].value_counts() + 1
+            idx = pos.index.union(neg.index)
+            pos, neg = pos.reindex(idx, fill_value=1), neg.reindex(idx, fill_value=1)
+            self.table_[f] = np.log((pos / pos.sum()) / (neg / neg.sum()))
+        return self
+
+    def decision_function(self, X):
+        return sum(self._bin(X, f).map(self.table_[f]).fillna(0.0).to_numpy() for f in self.feats)
+
+
 def score(pipe, X):
+    if isinstance(pipe, FrequencyRatio):
+        return pipe.decision_function(X)
     return pipe.decision_function(X) if hasattr(pipe, 'decision_function') and isinstance(pipe[-1], (SVC, LogisticRegression)) else pipe.predict_proba(X)[:, 1]
 
 
@@ -140,6 +176,7 @@ print('setup', R['setup'], flush=True)
 
 # ---- E2: per-fold logistic regression, SVM and random forest with the baseline preprocessing
 R['E2'] = {m: S2.cv(lambda m=m: model(m, ALL_FEATS), ALL_FEATS) for m in ['lr', 'svm', 'rf']}
+R['E2']['frequency_ratio'] = S2.cv(lambda: FrequencyRatio(ALL_FEATS), ALL_FEATS)
 print('E2', {k: v['auc_mean'] for k, v in R['E2'].items()}, round(time.time() - t0), flush=True)
 
 # ---- E1 preprocessing
@@ -173,6 +210,10 @@ R['E4'] = {'random (v1)': {m: S1.cv(lambda m=m: model(m, ALL_FEATS), ALL_FEATS) 
            'n': {'random (v1)': int(len(d1)), 'paired (current)': int(len(d2))}}
 # terrain-only comparison isolates how much of the score comes from terrain contrast
 R['E4']['terrain_only'] = {name: S.cv(lambda: model('lr', GROUPS['terrain']), GROUPS['terrain']) for name, S in [('random (v1)', S1), ('paired (current)', S2)]}
+# which non-terrain groups separate the earlier random negatives more easily than the paired ones
+R['E4']['terrain_plus_group'] = {g: {name: S.cv(lambda g=g: model('lr', GROUPS['terrain'] + GROUPS[g]), GROUPS['terrain'] + GROUPS[g])['auc_mean']
+                                     for name, S in [('random (v1)', S1), ('paired (current)', S2)]}
+                                 for g in ['hydrology', 'soil', 'ndvi', 'land_cover', 'lithology', 'distances']}
 print('E4', round(time.time() - t0), flush=True)
 
 # ---- E5 leave-one-province-out (5 km buffer around the held-out province)
@@ -239,8 +280,40 @@ ERR['confusion'] = {'detected': int((pos.pred == 1).sum()), 'missed': int((pos.p
                     'false_alarms': int(((t.landslide == 0) & (t.pred == 1)).sum()), 'correct_negatives': int(((t.landslide == 0) & (t.pred == 0)).sum())}
 ERR['ndvi_median'] = {'landslides': float(d2.loc[d2.landslide == 1, 'ndvi'].median()), 'negatives': float(d2.loc[d2.landslide == 0, 'ndvi'].median()),
                       'detected_test_landslides': float(pos.loc[pos.pred == 1, 'ndvi'].median()), 'missed_test_landslides': float(pos.loc[pos.pred == 0, 'ndvi'].median())}
-grid = pd.read_csv(ROOT / 'results/susceptibility_map/susceptibility_grid_points.csv', usecols=['raw_probability'])
-q80, q90 = grid.raw_probability.quantile([0.8, 0.9])
-ERR['decision'] = {'top20': float((pos.heldout_score >= q80).mean()), 'top10': float((pos.heldout_score >= q90).mean()), 'n_test_landslides': int(len(pos))}
+
+# ---- Calibration slope on the held-out fold (raw Platt scores of the selected model, and after isotonic calibration)
+from sklearn.linear_model import LogisticRegression as _LR
+calibrator = joblib.load(ROOT / 'models/susceptibility' / f"{meta['best_model']}_isotonic_calibrator.joblib")
+def cal_slope(p, y):
+    p = np.clip(p, 1e-4, 1 - 1e-4); z = np.log(p / (1 - p)).reshape(-1, 1)
+    fit = _LR(C=1e6).fit(z, y); return round(float(fit.coef_[0][0]), 3), round(float(fit.intercept_[0]), 3)
+ERR['calibration'] = {'raw_slope_intercept': cal_slope(t.heldout_score.to_numpy(), t.landslide.to_numpy()),
+                      'isotonic_slope_intercept': cal_slope(calibrator.predict(t.heldout_score.to_numpy()), t.landslide.to_numpy())}
+
+# ---- Decision value on the held-out blocks only, with models trained on the training split
+grid_dirs = sorted(FACTOR_GRID.glob('factor_grid_points_*')) if FACTOR_GRID.exists() else []
+if grid_dirs:
+    lith = {c['value']: c['name'] for c in json.loads((ROOT / 'scripts/glim_lithology_classes.json').read_text())['classes']}
+    lulc = {c['value']: c['name'] for c in json.loads((ROOT / 'scripts/servir_landcover_classes.json').read_text())['classes']}
+    test_blocks = set(S2.groups[S2.test])
+    parts = []
+    for f in sorted(grid_dirs[-1].glob('tile_*.csv')):
+        g = pd.read_csv(f)
+        blocks = np.floor(g.px_lon / BLOCK).astype(int).astype(str) + '_' + np.floor(g.px_lat / BLOCK).astype(int).astype(str)
+        g = g[blocks.isin(test_blocks).to_numpy()]
+        if len(g):
+            parts.append(g)
+    grid = pd.concat(parts, ignore_index=True).rename(columns={'TRI': 'tri', 'TPI': 'tpi', 'LS_factor': 'ls_factor', 'TWI': 'twi', 'SPI': 'spi', 'NDVI': 'ndvi', 'LULC_current': 'lulc'})
+    grid['lithology'] = grid['lithology'].map(lith)   # grid stores class codes; the model was trained on class names
+    grid['lulc'] = grid['lulc'].map(lulc)
+    test_ls = S2.test[S2.y[S2.test] == 1]
+    dv = {'n_cells_heldout_area': int(len(grid)), 'n_heldout_landslides': int(len(test_ls))}
+    for m in ['lr', 'svm']:
+        pp = model(m, ALL_FEATS).fit(d2.iloc[S2.train][ALL_FEATS], S2.y[S2.train])
+        cells = score(pp, grid[ALL_FEATS]); pts = score(pp, d2.iloc[test_ls][ALL_FEATS])
+        dv[m] = {'top20': round(float((pts >= np.quantile(cells, 0.8)).mean()), 4), 'top10': round(float((pts >= np.quantile(cells, 0.9)).mean()), 4)}
+    ERR['decision_heldout_blocks'] = dv
+    print('decision value (held-out blocks)', dv, flush=True)
+print('calibration', ERR['calibration'], flush=True)
 (OUT / 'errors.json').write_text(json.dumps(ERR, indent=1))
 print('saved', round(time.time() - t0))

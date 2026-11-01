@@ -261,9 +261,26 @@
   "detected_test_landslides": 0.7649989620095495,
   "missed_test_landslides": 0.8311446240287594
  },
- "decision": {
-  "top20": 0.9643811219946572,
-  "top10": 0.8601959038290294,
-  "n_test_landslides": 1123
+ "calibration": {
+  "raw_slope_intercept": [
+   1.024,
+   -1.153
+  ],
+  "isotonic_slope_intercept": [
+   1.681,
+   -2.004
+  ]
+ },
+ "decision_heldout_blocks": {
+  "n_cells_heldout_area": 69282,
+  "n_heldout_landslides": 1123,
+  "lr": {
+   "top20": 0.6536,
+   "top10": 0.3589
+  },
+  "svm": {
+   "top20": 0.8789,
+   "top10": 0.6768
+  }
  }
 }

@@ -59,10 +59,19 @@ def latest_grid_dir():
     return candidates[-1]
 
 
+def class_names(json_name):
+    """Code -> class name table used when the training table was built (scripts/*_classes.json)."""
+    classes = json.loads((Path(__file__).with_name(json_name)).read_text())["classes"]
+    return {c["value"]: c["name"] for c in classes}
+
+
 def load_grid(grid_dir):
     frames = [pd.read_csv(f) for f in sorted(grid_dir.glob("tile_*.csv"))]
     df = pd.concat(frames, ignore_index=True)
     df = df.rename(columns=RENAME)
+    # The grid stores lithology and land cover as integer codes; the model was trained on class names.
+    df["lithology"] = df["lithology"].map(class_names("glim_lithology_classes.json"))
+    df["lulc"] = df["lulc"].map(class_names("servir_landcover_classes.json"))
     return df
 
 
