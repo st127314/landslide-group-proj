@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChartColumn, CloudRain, LayoutDashboard, Map, Mountain } from "lucide-react";
+import { ChartColumn, CloudRain, Database, LayoutDashboard, Map, Mountain } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 
 const LINKS = [
@@ -10,6 +10,7 @@ const LINKS = [
   { href: "/impact", label: "Live Impact", icon: Map },
   { href: "/warning", label: "Early Warning", icon: CloudRain },
   { href: "/model", label: "Model", icon: ChartColumn },
+  { href: "/data", label: "Data", icon: Database },
 ];
 
 export default function Nav() {

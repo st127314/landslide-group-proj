@@ -1,6 +1,7 @@
 import { api } from "@/lib/api";
 import ModelTable from "@/components/ModelTable";
 import Page from "@/components/Page";
+import Limitations from "@/components/Limitations";
 
 export default async function ModelPage() {
   let metadata: Awaited<ReturnType<typeof api.model>> | null = null;
@@ -101,31 +102,7 @@ export default async function ModelPage() {
         </section>
       )}
 
-      {metadata && (
-        <section className="mt-6 card">
-          <h2 className="card-title">Excluded / feature columns</h2>
-          <div className="mt-3 grid gap-4 text-sm sm:grid-cols-3">
-            <div>
-              <div className="mb-1 font-medium text-muted">Numeric</div>
-              <div className="text-fg">
-                {metadata.numeric_features.join(", ")}
-              </div>
-            </div>
-            <div>
-              <div className="mb-1 font-medium text-muted">Categorical</div>
-              <div className="text-fg">
-                {metadata.categorical_features.join(", ")}
-              </div>
-            </div>
-            <div>
-              <div className="mb-1 font-medium text-muted">Excluded (ids/coords/target)</div>
-              <div className="text-fg">
-                {metadata.excluded_columns.join(", ")}
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
+      <Limitations groups={["data", "model"]} />
     </Page>
   );
 }
