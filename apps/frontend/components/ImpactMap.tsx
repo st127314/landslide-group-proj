@@ -6,9 +6,21 @@ import type { Map as MapLibreMap } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { api } from "@/lib/api";
 
-// Public, no-API-key basemap style maintained by the MapLibre project --
-// fine for this scaffold; swap for your own style/tile source in production.
-const BASE_STYLE = "https://demotiles.maplibre.org/style.json";
+// OpenStreetMap standard tiles: no API key, attribution required. Fine for a low-traffic project site under the
+// OSM tile usage policy; a heavily used deployment should move to a commercial or self-hosted tile service.
+const BASE_STYLE: maplibregl.StyleSpecification = {
+  version: 8,
+  sources: {
+    osm: {
+      type: "raster",
+      tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
+      tileSize: 256,
+      maxzoom: 19,
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    },
+  },
+  layers: [{ id: "osm", type: "raster", source: "osm" }],
+};
 
 // Served from public/ (copied there by scripts/copy-maplibre-worker.mjs): the bundle does not ship the worker.
 maplibregl.setWorkerUrl("/maplibre-gl-worker.mjs");
