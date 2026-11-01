@@ -24,7 +24,9 @@ http:
           ipStrategy:
             depth: 1                 # client IP as appended by the host nginx in X-Forwarded-For
     landslide-compress:
-      compress: {}
+      compress:
+        # PMTiles are read in byte ranges and their tiles are already gzipped; compressing them would break the ranges.
+        excludedContentTypes: [application/vnd.pmtiles]
     landslide-headers:
       headers:
         contentTypeNosniff: true

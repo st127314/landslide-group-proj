@@ -264,6 +264,7 @@ export const api = {
       undefined,
       "default"
     ),
+  buildingsTilesUrl: () => `${API_URL}/api/impact/buildings.pmtiles`,
   susceptibilityRasterUrl: () => `${API_URL}/api/impact/susceptibility-raster.png`,
   susceptibilityAt: (lon: number, lat: number) =>
     getJSON<{ lon: number; lat: number; calibrated_probability: number; susceptibility_class: string | null }>(

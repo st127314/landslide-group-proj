@@ -35,6 +35,7 @@ _write("data/external/buildings_aoi.geojson", _fc([
 _write("data/external/facilities_aoi.geojson", _fc([
     {"type": "Feature", "properties": {"fclass": "hospital"}, "geometry": {"type": "Point", "coordinates": [99.0, 8.0]}},
     {"type": "Feature", "properties": {"fclass": "school"}, "geometry": {"type": "Point", "coordinates": [99.1, 8.1]}}]))
+(ROOT / "data/external/buildings.pmtiles").write_bytes(b"PMTiles" + bytes(range(64)))
 _write("data/external/worldpop_manifest.json", {"stats": {"total_population": 1234.0}, "license": "CC BY 4.0"})
 _write("data/external/manifest.json", {"limitations": []})
 _write("models/susceptibility/model_metadata.json", {

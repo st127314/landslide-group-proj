@@ -1,7 +1,8 @@
 import orjson
 from fastapi import APIRouter, HTTPException, Query, Response
+from fastapi.responses import FileResponse
 
-from .. import data, scenario as scenario_logic
+from .. import data, paths, scenario as scenario_logic
 
 router = APIRouter(prefix="/api/impact", tags=["impact"])
 
@@ -43,6 +44,15 @@ def facilities():
     if geojson is None:
         raise HTTPException(status_code=404, detail="Facilities layer not found. Run download_external_data.py first.")
     return _static(geojson)
+
+
+@router.get("/buildings.pmtiles")
+def buildings_tiles():
+    """All 426k building footprints as one PMTiles vector-tile archive (scripts/make_buildings_tiles.sh). The map reads
+    it with HTTP range requests, so only the tiles in view travel and the server holds nothing in memory."""
+    if not paths.BUILDINGS_TILES_PATH.exists():
+        raise HTTPException(status_code=404, detail="Buildings tiles not found. Run scripts/make_buildings_tiles.sh.")
+    return FileResponse(paths.BUILDINGS_TILES_PATH, media_type="application/vnd.pmtiles", headers=STATIC_CACHE)
 
 
 @router.get("/buildings")

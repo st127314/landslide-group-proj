@@ -97,3 +97,10 @@ def test_building_count_falls_back_to_manifest_when_layer_not_loaded(monkeypatch
     monkeypatch.setattr(data, "buildings_index", lambda: NotLoaded())
     monkeypatch.setattr(data, "external_manifest", lambda: {"outputs": {"buildings_aoi": {"features": 426519}}})
     assert client.get("/api/overview").json()["buildings_mapped"] == 426519
+
+
+def test_buildings_tiles_support_range_requests():
+    full = client.get("/api/impact/buildings.pmtiles")
+    assert full.status_code == 200 and full.headers["content-type"] == "application/vnd.pmtiles"
+    part = client.get("/api/impact/buildings.pmtiles", headers={"Range": "bytes=0-6"})
+    assert part.status_code == 206 and part.content == b"PMTiles"

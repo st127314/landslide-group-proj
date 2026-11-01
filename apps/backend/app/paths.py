@@ -40,6 +40,7 @@ def _web_layer(slim, full):
 
 BOUNDARY_PATH = _web_layer(BOUNDARY_DIR / "southern_thailand_web.geojson", BOUNDARY_DIR / "southern_thailand.geojson")
 BUILDINGS_PATH = EXTERNAL_DIR / "buildings_aoi.geojson"
+BUILDINGS_TILES_PATH = EXTERNAL_DIR / "buildings.pmtiles"  # from scripts/make_buildings_tiles.sh
 FACILITIES_PATH = _web_layer(EXTERNAL_DIR / "facilities_web.geojson", EXTERNAL_DIR / "facilities_aoi.geojson")
 WORLDPOP_MANIFEST_PATH = EXTERNAL_DIR / "worldpop_manifest.json"
 EXTERNAL_MANIFEST_PATH = EXTERNAL_DIR / "manifest.json"

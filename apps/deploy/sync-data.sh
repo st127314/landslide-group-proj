@@ -5,10 +5,10 @@
 #   SKIP_BUILDINGS=1 apps/deploy/sync-data.sh key.pem user@host     # small servers (see below)
 #   SSH_EXTRA="-o UserKnownHostsFile=/path/known_hosts -o StrictHostKeyChecking=yes" ...   # pin the host key
 #
-# SKIP_BUILDINGS=1 leaves out the 426k building footprints (140 MB GeoJSON) and the unused tambon polygons.
-# Loading the footprints takes the API about 1.4 GB of RAM, so a server with < 4 GB should skip them: the API then
-# simply reports buildings as unavailable and every other feature (live forecast, scenario, susceptibility map,
-# facilities, model page) works.
+# SKIP_BUILDINGS=1 leaves out the 426k building footprints as GeoJSON (140 MB) and the unused tambon polygons.
+# Loading that GeoJSON takes the API about 1.4 GB of RAM, so a server with < 4 GB should skip it. The map does not need
+# it: buildings are drawn from data/external/buildings.pmtiles (20 MB vector tiles, always uploaded); only the
+# bounding-box endpoint /api/impact/buildings then reports them as unavailable.
 set -euo pipefail
 KEY="${1:?usage: sync-data.sh <key.pem> <user@host>}"
 HOST="${2:?usage: sync-data.sh <key.pem> <user@host>}"
@@ -23,6 +23,7 @@ FILES=(
   "data/boundary/southern_thailand_tambon_points.csv"   # forecast job inputs
   "data/external/rain_percentiles_24h_tambon.csv"
   "data/external/manifest.json"
+  "data/external/buildings.pmtiles"                     # 20 MB vector tiles, served by range requests
   "models/susceptibility/model_metadata.json"
   "models/susceptibility/landslide_sample_susceptibility_scores.csv"
   "results/susceptibility_map/susceptibility_grid_points.csv"

@@ -1,15 +1,21 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as maplibregl from "maplibre-gl";
 import type { Map as MapLibreMap } from "maplibre-gl";
 import type { FeatureCollection } from "geojson";
 import "maplibre-gl/dist/maplibre-gl.css";
+import { Protocol } from "pmtiles";
 import { ChevronDown, Layers as LayersIcon, List, MapPin, TriangleAlert, X } from "lucide-react";
 import { api } from "@/lib/api";
 
 // Served from public/ (copied there by scripts/copy-maplibre-worker.mjs): the bundle does not ship the worker.
 maplibregl.setWorkerUrl("/maplibre-gl-worker.mjs");
+
+// Buildings come as one PMTiles archive read with HTTP range requests (scripts/make_buildings_tiles.sh).
+const pmtilesProtocol = new Protocol();
+maplibregl.addProtocol("pmtiles", pmtilesProtocol.tile);
+const BUILDINGS_MIN_ZOOM = 12;
 
 const OSM_ATTRIBUTION = '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 
@@ -70,7 +76,7 @@ interface Layers {
 const LAYER_ROWS: Array<{ key: keyof Layers; label: string; hint?: string }> = [
   { key: "susceptibilityGrid", label: "Susceptibility map", hint: "250 m grid, calibrated score" },
   { key: "facilities", label: "Critical facilities", hint: "OSM, 3,895 points" },
-  { key: "buildings", label: "Buildings", hint: "Loaded for the current view" },
+  { key: "buildings", label: "Buildings", hint: "426,519 footprints, visible from town scale" },
   { key: "susceptibility", label: "Training / test samples", hint: "Held-out score per point" },
   { key: "boundary", label: "Province boundaries" },
 ];
@@ -125,30 +131,10 @@ export default function ImpactMap() {
   });
   const [panelOpen, setPanelOpen] = useState(true);
   const [legendOpen, setLegendOpen] = useState(true);
-  const [buildingsTruncated, setBuildingsTruncated] = useState(false);
-  const [buildingsCount, setBuildingsCount] = useState(0);
+  const [zoom, setZoom] = useState(STUDY_AREA_ZOOM);
   const [rasterAvailable, setRasterAvailable] = useState(true);
   const [selected, setSelected] = useState<Selection | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
-
-  const refreshBuildings = useCallback(async () => {
-    const map = mapRef.current;
-    if (!map || !map.getSource("buildings")) return;
-    const bounds = map.getBounds();
-    try {
-      const data = await api.buildings(
-        [bounds.getWest(), bounds.getSouth(), bounds.getEast(), bounds.getNorth()],
-        5000
-      );
-      (map.getSource("buildings") as maplibregl.GeoJSONSource).setData(
-        data as unknown as FeatureCollection
-      );
-      setBuildingsTruncated(data.truncated);
-      setBuildingsCount(data.features.length);
-    } catch {
-      // Buildings not deployed (small server) / API unreachable -- leave the last good data in place.
-    }
-  }, []);
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -161,6 +147,7 @@ export default function ImpactMap() {
       attributionControl: { compact: true },
     });
     mapRef.current = map;
+    map.on("zoomend", () => setZoom(map.getZoom()));
     map.addControl(new maplibregl.NavigationControl({ visualizePitch: false }), "top-right");
     map.addControl(new maplibregl.ScaleControl({ maxWidth: 120 }), "bottom-left");
 
@@ -240,13 +227,19 @@ export default function ImpactMap() {
           },
         });
 
-        map.addSource("buildings", { type: "geojson", data: { type: "FeatureCollection", features: [] } });
+        // PMTiles needs an absolute URL; the API may be same-origin ("").
+        map.addSource("buildings", {
+          type: "vector",
+          url: `pmtiles://${new URL(api.buildingsTilesUrl(), window.location.href).href}`,
+        });
         map.addLayer(
           {
             id: "buildings-fill",
             type: "fill",
             source: "buildings",
-            paint: { "fill-color": BUILDING_COLOR, "fill-opacity": 0.55 },
+            "source-layer": "buildings",
+            minzoom: BUILDINGS_MIN_ZOOM,
+            paint: { "fill-color": BUILDING_COLOR, "fill-opacity": 0.55, "fill-outline-color": BUILDING_COLOR },
           },
           "susceptibility-points"
         );
@@ -303,8 +296,6 @@ export default function ImpactMap() {
           map.on("mouseleave", id, () => (map.getCanvas().style.cursor = ""));
         }
 
-        map.on("moveend", refreshBuildings);
-        refreshBuildings();
       } catch (e) {
         setLoadError(e instanceof Error ? e.message : String(e));
       }
@@ -315,7 +306,6 @@ export default function ImpactMap() {
       map.remove();
       mapRef.current = null;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const samplesLoaded = useRef(false);
@@ -396,10 +386,8 @@ export default function ImpactMap() {
                 </span>
               </label>
             ))}
-            {layers.buildings && buildingsCount > 0 && (
-              <p className="px-2 pt-1 text-xs text-muted">
-                {buildingsCount.toLocaleString()} buildings in view{buildingsTruncated ? " (capped, zoom in for all)" : ""}.
-              </p>
+            {layers.buildings && zoom < BUILDINGS_MIN_ZOOM && (
+              <p className="px-2 pt-1 text-xs text-muted">Zoom in to a town to see building footprints.</p>
             )}
             {layers.susceptibilityGrid && !rasterAvailable && (
               <p className="px-2 pt-1 text-xs text-muted">The susceptibility map is not available on this server yet.</p>
