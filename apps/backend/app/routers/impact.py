@@ -117,7 +117,8 @@ def susceptibility_raster_bounds():
     body = data.susceptibility_png_bounds()
     if body is None:
         raise HTTPException(status_code=404, detail="Susceptibility PNG not found. Run scripts/make_susceptibility_png.py.")
-    return _static(body)
+    # Always revalidated: it carries the PNG version, and a stale copy would point the map at the old image.
+    return Response(content=body, media_type="application/json", headers={"Cache-Control": "no-cache"})
 
 
 @router.get("/susceptibility-at")

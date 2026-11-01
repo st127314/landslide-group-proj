@@ -262,7 +262,7 @@ export const api = {
     getJSON<{ coordinates: [number, number][]; width: number; height: number; cell_m: number; version?: string }>(
       "/api/impact/susceptibility-raster.json",
       undefined,
-      "default"
+      "no-cache"
     ),
   buildingsTilesUrl: () => `${API_URL}/api/impact/buildings.pmtiles`,
   // ?v= is the PNG's content hash, so a regenerated map gets a new URL past any cached copy.

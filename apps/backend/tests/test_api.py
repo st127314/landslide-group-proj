@@ -50,7 +50,9 @@ def test_susceptibility_raster_and_point_lookup():
     png = client.get("/api/impact/susceptibility-raster.png")
     assert png.status_code == 200 and png.headers["content-type"] == "image/png"
     assert "max-age" in png.headers["cache-control"]
-    bounds = client.get("/api/impact/susceptibility-raster.json").json()
+    bounds_response = client.get("/api/impact/susceptibility-raster.json")
+    assert bounds_response.headers["cache-control"] == "no-cache"
+    bounds = bounds_response.json()
     assert len(bounds["coordinates"]) == 4 and len(bounds["version"]) == 12
     cell = client.get("/api/impact/susceptibility-at?lon=99.101&lat=8.099").json()
     assert cell["susceptibility_class"] == "very_low" and cell["lon"] == 99.1
