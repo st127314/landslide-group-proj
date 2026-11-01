@@ -2,8 +2,29 @@ import Link from "next/link";
 import { api } from "@/lib/api";
 import StatCard from "@/components/StatCard";
 import Page from "@/components/Page";
-import { ArrowRight, Building2, ChartColumn, CircleDashed, Hospital, Mountain, Users } from "lucide-react";
+import { ArrowRight, Building2, ChartColumn, CircleDashed, CloudRain, Hospital, Mountain, Users } from "lucide-react";
 import PipelineStatusList from "@/components/PipelineStatusList";
+
+const COMPONENTS = [
+  {
+    icon: Mountain,
+    step: "Where",
+    title: "Terrain susceptibility",
+    text: "A machine-learning model trained on 6,180 mapped landslides rates every 250 m cell from very low to very high, using terrain, soil, geology, vegetation and land-cover factors.",
+  },
+  {
+    icon: CloudRain,
+    step: "When",
+    title: "Rainfall forecast",
+    text: "The NOAA GFS forecast for the next 24–72 hours is compared with each sub-district's own 30-year rainfall record to flag rain that is unusually heavy for that place.",
+  },
+  {
+    icon: Users,
+    step: "Who is affected",
+    title: "Exposure",
+    text: "Population (WorldPop), buildings and critical facilities (OpenStreetMap) are matched to the susceptibility map and the forecast to count what is at elevated risk.",
+  },
+];
 
 function fmt(n: number | null | undefined, digits = 0) {
   if (n === null || n === undefined || Number.isNaN(n)) return "—";
@@ -21,16 +42,31 @@ export default async function OverviewPage() {
 
   return (
     <Page
-      title="Landslide impact in southern Thailand"
+      title="Landslide risk and impact in southern Thailand"
       description={
         <>
-          A landslide early-warning pipeline for southern Thailand: a terrain/soil/lithology
-          susceptibility model (<strong className="text-fg">where</strong>), NOAA GFS forecast rainfall
-          (<strong className="text-fg">when</strong>, next 24&ndash;72 h), and an impact overlay against OSM buildings,
-          critical facilities and WorldPop population to report what is actually affected.
+          A decision-support tool for Thailand&apos;s 14 southern provinces. It shows which terrain is most prone to
+          landslides, where the rain forecast for the next 24&ndash;72 hours is unusually heavy for the area, and how
+          many people, buildings and critical facilities lie in the most susceptible places.
         </>
       }
     >
+      <section className="mb-6 grid gap-4 md:grid-cols-3">
+        {COMPONENTS.map(({ icon: Icon, step, title, text }) => (
+          <div key={title} className="card p-4">
+            <div className="flex items-center gap-3">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent-soft text-accent">
+                <Icon className="h-5 w-5" aria-hidden />
+              </span>
+              <div>
+                <div className="eyebrow">{step}</div>
+                <div className="text-sm font-semibold">{title}</div>
+              </div>
+            </div>
+            <p className="mt-3 text-sm leading-relaxed text-muted">{text}</p>
+          </div>
+        ))}
+      </section>
 
       {error && (
         <div className="mb-6 note-danger">
