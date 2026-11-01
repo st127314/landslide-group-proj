@@ -127,7 +127,8 @@ def main():
     summary = {
         "model": best_model,
         "selection": metadata.get("selection"),
-        "grid_source": str(grid_dir.relative_to(PROJECT_DIR)),
+        "grid_source": (str(grid_dir.relative_to(PROJECT_DIR)) if grid_dir.is_relative_to(PROJECT_DIR)
+                        else f"data/processed/factor_grid_points/{grid_dir.name}"),
         "point_count": int(len(df)),
         "score_interpretation": metadata.get("score_interpretation"),
         "threshold_raw_probability": metadata["threshold_raw_probability"],
@@ -139,7 +140,7 @@ def main():
             "(see model_metadata.json's score_interpretation), not calibrated to real-world prevalence.",
             "Grid is 250 m point samples, not the model's native 30 m training resolution -- see "
             "scripts/gee_sample_factor_grid_points.py's docstring for why this is not a meaningful "
-            "accuracy loss given the model's own ~28 km spatial-CV validation granularity.",
+            "accuracy loss given the model's 0.5 deg (~55 km) spatial-CV blocks.",
             "dist_to_fault/dist_to_road/dist_to_river are null for points beyond their 20 km search "
             "radius (much more common in this regional grid than in the training data, which sat at "
             "event locations); the trained median imputer fills these the same way it does in training.",

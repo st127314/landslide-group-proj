@@ -16,7 +16,7 @@
 
 **Hold-out performance of the selected model.** ROC-AUC **0.940** (95% CI 0.932–0.948), PR-AUC 0.904, balanced accuracy 0.829, sensitivity 0.986, specificity 0.673, Cohen's κ 0.625 (`models/susceptibility/model_metadata.json`, `results/figures/3_model_comparison.png`). The cross-validation estimate (0.934) and the hold-out (0.940) now agree, and all eleven models fall within 0.87–0.94 on the hold-out (top four within 0.003 in CV), which is the pattern expected once leakage is removed. Selection used the nested CV, not the hold-out fold.
 
-**Map.** The factor stack was point-sampled on a 250 m grid inside the boundary (148 of 150 tiles contain points; the other two clip the boundary with no grid point), scored and calibrated: 1,137,629 cells, 64.4% very low, 7.2% low, 7.8% moderate, 11.4% high, 9.3% very high (calibrated-score bins 0.2/0.4/0.6/0.8; 25.5% of cells exceed the decision threshold). Output: `results/susceptibility_map/` (CSV and GeoTIFF).
+**Map.** The factor stack was point-sampled on a 250 m grid inside the boundary (148 of 150 tiles contain points; the other two clip the boundary with no grid point), scored and calibrated: 1,137,629 cells, 62.8% very low, 7.2% low, 7.4% moderate, 11.2% high, 11.4% very high (calibrated-score bins 0.2/0.4/0.6/0.8; 27.2% of cells exceed the decision threshold). Lithology and land cover are converted from the grid's numeric codes to the class names used in training before scoring. Output: `results/susceptibility_map/` (CSV and GeoTIFF).
 
 ## 3. Live rainfall forecast (GFS) — and the rainfall model that was dropped
 
@@ -50,7 +50,7 @@ Neither set is calibrated on landslide records. Local percentiles say **how unus
 
 It is a product, not a sum, on purpose: rain alone creates no risk on terrain that cannot slide (flat ground never exceeds "moderate"), no unusual rain means "low" everywhere, and "very high" needs the steepest tier **and** rain above that tambon's P95. (A first version added the two scores; the what-if scenario below showed that made every tambon "high" in a heavy storm, so it was replaced.) The rule is a **transparent triage rule, not a calibrated probability and not a validated landslide forecast**: the terrain half comes from a model with a held-out ROC-AUC of 0.94, the rain half from local rainfall percentiles (not calibrated on landslides). **People at elevated risk** = people living in high/very-high susceptibility cells of tambons whose live impact class is high or very high (same definition for buildings and facilities). Two sliver tambons contain no grid cell and are `not_assessed`.
 
-**Results for the shipped run (a quiet-weather snapshot):** all 1,053 assessed tambons are *low* (no tambon's forecast rain is unusual for its climate), 2 not assessed; nobody is at elevated risk. The terrain tiers themselves (776 low, 180 moderate, 97 high) are unaffected by the weather. Independent of the weather, 59,663 of 9,385,884 people (0.64%), 4,402 of 426,519 buildings (1.0%) and 29 of 3,895 facilities live in high/very-high susceptibility cells; largest populations: Phuket 16,398 (1.6% of the province), Nakhon Si Thammarat 13,494 (1.0%), Yala 11,941 (2.8%), Ranong 4,306 (1.2%). Phuket, Nakhon Si Thammarat, Yala and Ranong have almost no landslide training points, so these are **extrapolation** (Known issue 3). GFS cells are ~28 km wide, so neighbouring tambons often share one rainfall value.
+**Results for the shipped run (a quiet-weather snapshot):** all 1,053 assessed tambons are *low* (no tambon's forecast rain is unusual for its climate), 2 not assessed; nobody is at elevated risk. The terrain tiers themselves (753 low, 194 moderate, 106 high) are unaffected by the weather. Independent of the weather, 71,402 of 9,385,884 people (0.76%), 5,983 of 426,519 buildings (1.4%) and 34 of 3,895 facilities live in high/very-high susceptibility cells; largest populations: Phuket 21,320 (2.1% of the province), Nakhon Si Thammarat 13,625 (1.0%), Yala 12,998 (3.1%), Ranong 5,239 (1.5%). Phuket, Nakhon Si Thammarat, Yala and Ranong have almost no landslide training points, so these are **extrapolation** (Known issue 3). GFS cells are ~28 km wide, so neighbouring tambons often share one rainfall value.
 
 Outputs: `results/impact_overlay/impact_overlay_by_tambon.csv`, `..._by_province.csv`, `facility_exposure.csv`, `impact_overlay.json` (served by the API).
 
@@ -61,13 +61,13 @@ Outputs: `results/impact_overlay/impact_overlay_by_tambon.csv`, `..._by_province
 | Scenario (24 h rain) | Tambons very high / high / moderate | People at elevated risk | Buildings | Facilities |
 |---|---|---|---|---|
 | live forecast (max 18 mm) | 0 / 0 / 0 | 0 | 0 | 0 |
-| 30 mm, whole south | 0 / 138 / 793 | 24,070 | 1,512 | 16 |
-| 50 mm, whole south | 75 / 199 / 777 | 41,128 | 3,841 | 21 |
-| 100 mm (or 150, 250), whole south | 97 / 180 / 776 | 43,209 | 3,842 | 21 |
-| 150 mm in Yala only | 13 / 13 / 32 | 11,507 | 5 | 4 |
+| 30 mm, whole south | 2 / 152 / 784 | 30,879 | 2,158 | 21 |
+| 50 mm, whole south | 81 / 215 / 756 | 51,537 | 5,360 | 26 |
+| 100 mm (or 150, 250), whole south | 106 / 194 / 753 | 54,022 | 5,362 | 26 |
+| 150 mm in Yala only | 14 / 16 / 28 | 12,525 | 6 | 8 |
 | 150 mm in Phuket only | 2 / 7 / 8 | 6,353 | 1,036 | 6 |
 
-Properties to keep in mind: a scenario applies the same rain to every tambon in scope (real storms are patchy); because classes are percentiles, they **saturate** once rain passes a tambon's P95 (about 40–70 mm in the south), so 100 mm and 250 mm give the same answer; and the exposure counts only people, buildings and facilities on high/very-high susceptibility ground (43,209 of the 59,663 such people sit in tambons that can reach "high" or above).
+Properties to keep in mind: a scenario applies the same rain to every tambon in scope (real storms are patchy); because classes are percentiles, they **saturate** once rain passes a tambon's P95 (about 40–70 mm in the south), so 100 mm and 250 mm give the same answer; and the exposure counts only people, buildings and facilities on high/very-high susceptibility ground (54,022 of the 71,402 such people sit in tambons that can reach "high" or above).
 
 ## 5. Changes from the initial design
 
@@ -77,7 +77,7 @@ Properties to keep in mind: a scenario applies the same rain to every tambon in 
 | `dist_to_stream` | in the model; ≈ 2×10⁷ for 94% of events, acting as a date proxy | excluded |
 | Selected susceptibility model | gradient boosting: CV 0.961, hold-out 0.919 | `svm_rbf`: CV 0.934, hold-out 0.940 (CV and hold-out agree) |
 | Rainfall component | ML trigger, hold-out AUC 0.90 (most likely a sampling artefact), driven by IMERG + a +3 h GFS nudge | none: GFS 24 h forecast rain against each tambon's CHIRPS wet-day percentiles (the ML model was shown to have no skill, 0.34) |
-| People in high/very-high cells | 159,933 (1.7%) | 59,663 (0.64%) |
+| People in high/very-high cells | 159,933 (1.7%) | 71,402 (0.76%) |
 | Live impact class | terrain tier + ML trigger class (a sum) | terrain factor × local 24 h rain class (a product) |
 
 The initial design's problems, found by auditing the original inventory workbook, are documented below where they still apply.
