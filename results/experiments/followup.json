@@ -249,10 +249,10 @@
      "pr_mean": 0.9221
     },
     "holdout_auc": 0.9212,
-    "top20": 0.6536,
-    "top10": 0.3589,
-    "cell_top20": 0.5866,
-    "cell_top10": 0.2589
+    "top20": 0.65361,
+    "top10": 0.35886,
+    "cell_top20": 0.58661,
+    "cell_top10": 0.25893
    },
    "without_ndvi": {
     "cv": {
@@ -268,10 +268,10 @@
      "pr_mean": 0.8953
     },
     "holdout_auc": 0.8904,
-    "top20": 0.7507,
+    "top20": 0.75067,
     "top10": 0.3927,
-    "cell_top20": 0.5893,
-    "cell_top10": 0.292
+    "cell_top20": 0.58929,
+    "cell_top10": 0.29196
    },
    "without_ndvi_hydrology": {
     "cv": {
@@ -287,10 +287,10 @@
      "pr_mean": 0.8974
     },
     "holdout_auc": 0.89,
-    "top20": 0.7516,
-    "top10": 0.3918,
-    "cell_top20": 0.5893,
-    "cell_top10": 0.2911
+    "top20": 0.75156,
+    "top10": 0.39181,
+    "cell_top20": 0.58929,
+    "cell_top10": 0.29107
    },
    "terrain_only": {
     "cv": {
@@ -306,9 +306,9 @@
      "pr_mean": 0.9014
     },
     "holdout_auc": 0.8881,
-    "top20": 0.7961,
-    "top10": 0.4693,
-    "cell_top20": 0.6188,
+    "top20": 0.79608,
+    "top10": 0.46928,
+    "cell_top20": 0.61875,
     "cell_top10": 0.2875
    }
   },
@@ -328,9 +328,9 @@
     },
     "holdout_auc": 0.9397,
     "top20": 0.8789,
-    "top10": 0.6768,
-    "cell_top20": 0.6054,
-    "cell_top10": 0.3036
+    "top10": 0.67676,
+    "cell_top20": 0.60536,
+    "cell_top10": 0.30357
    },
    "without_ndvi": {
     "cv": {
@@ -346,10 +346,10 @@
      "pr_mean": 0.8723
     },
     "holdout_auc": 0.8992,
-    "top20": 0.9341,
-    "top10": 0.8094,
-    "cell_top20": 0.6134,
-    "cell_top10": 0.3063
+    "top20": 0.93411,
+    "top10": 0.80944,
+    "cell_top20": 0.61339,
+    "cell_top10": 0.30625
    },
    "without_ndvi_hydrology": {
     "cv": {
@@ -365,10 +365,10 @@
      "pr_mean": 0.8742
     },
     "holdout_auc": 0.9001,
-    "top20": 0.6776,
-    "top10": 0.1407,
-    "cell_top20": 0.6205,
-    "cell_top10": 0.3357
+    "top20": 0.67765,
+    "top10": 0.14069,
+    "cell_top20": 0.62054,
+    "cell_top10": 0.33571
    },
    "terrain_only": {
     "cv": {
@@ -384,10 +384,10 @@
      "pr_mean": 0.8916
     },
     "holdout_auc": 0.8924,
-    "top20": 0.8281,
+    "top20": 0.82814,
     "top10": 0.5049,
-    "cell_top20": 0.6545,
-    "cell_top10": 0.3312
+    "cell_top20": 0.65446,
+    "cell_top10": 0.33125
    }
   }
  },

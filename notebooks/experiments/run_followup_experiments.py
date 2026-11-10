@@ -125,10 +125,10 @@ for m in ['lr', 'svm']:
         cells, pts = score(p, held[feats]), score(p, d.iloc[test_ls][feats])
         own = cells[cell_of[on_grid]]
         row[label] = {'cv': S.cv(lambda m=m, f=feats: model(m, f), feats), 'holdout_auc': auc,
-                      'top20': round(float((pts >= np.quantile(cells, 0.8)).mean()), 4),
-                      'top10': round(float((pts >= np.quantile(cells, 0.9)).mean()), 4),
-                      'cell_top20': round(float((own >= np.quantile(cells, 0.8)).mean()), 4),
-                      'cell_top10': round(float((own >= np.quantile(cells, 0.9)).mean()), 4)}
+                      'top20': round(float((pts >= np.quantile(cells, 0.8)).mean()), 5),
+                      'top10': round(float((pts >= np.quantile(cells, 0.9)).mean()), 5),
+                      'cell_top20': round(float((own >= np.quantile(cells, 0.8)).mean()), 5),
+                      'cell_top10': round(float((own >= np.quantile(cells, 0.9)).mean()), 5)}
     R['F2'][m] = row
 print('F2', {m: {k: (v['holdout_auc'], v['top20'], v['cell_top20']) for k, v in R['F2'][m].items()} for m in ['lr', 'svm']}, round(time.time() - t0), flush=True)
 
