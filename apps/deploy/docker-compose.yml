@@ -65,8 +65,9 @@ services:
     depends_on: [backend]
     expose: ["3000"]
 
-  # One-shot job, never started by `docker compose up` (profile "jobs"). Cron runs it every 3 hours:
-  #   docker compose run --rm forecast
+  # One-shot job, never started by `docker compose up` (profile "jobs"). Cron runs it every 3 hours through
+  # run-forecast.sh (retries, checks the result, restores the last good forecast on failure):
+  #   docker compose --profile jobs run --rm forecast
   # It writes only the live forecast and the impact overlay; the backend re-reads both on every request.
   forecast:
     image: ghcr.io/${GHCR_OWNER}/landslide-forecast:${IMAGE_TAG:-latest}

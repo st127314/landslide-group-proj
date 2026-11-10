@@ -56,14 +56,28 @@ apps/deploy/install-forecast-cron.sh credentials/github_deploy_key ubuntu@<serve
 ```
 
 It copies the Earth Engine service-account key to `/opt/landslide/secrets/gee_key.json` (mode 600, mounted read-only
-into the job) and installs the cron entry `20 */3 * * * docker compose --profile jobs run --rm forecast`. The API
-re-reads the forecast and overlay on every request, so no restart is needed. Log: `/opt/landslide/forecast.log`.
+into the job), copies `run-forecast.sh` to `/opt/landslide/` and installs the cron entry
+`20 */3 * * * /opt/landslide/run-forecast.sh`. GFS issues a run at 00/06/12/18 UTC and Earth Engine has it a few hours
+later, so every new run is on the dashboard within 3 hours of appearing, and the 24 h to 5-day windows are
+recomputed from "now" each time. The API re-reads the forecast and overlay on every request, so no restart is needed.
+
+`run-forecast.sh` makes every run safe to fail:
+
+1. It snapshots the forecast and overlay being served (`/opt/landslide/forecast-last-good/`).
+2. It runs the `forecast` job up to 3 times (15 min limit each, 5 min apart), never two at once (`flock`).
+3. It accepts the result only if both files are complete (at least 1,000 tambons), come from the same GFS run and are
+   not older than the one being served.
+4. Otherwise it **restores the snapshot**: the dashboard keeps showing the previous forecast, with its own run date,
+   instead of an empty or half-updated one.
+
+Log: `/opt/landslide/forecast.log`; `forecast.last_ok` / `forecast.last_failed` hold the time of the last success and the
+last failure with its reason. The dashboard shows the run's age and flags it as stale after 18 h; the deploy workflow warns when the served forecast is more than 2 days old.
 
 ## Files
 
 ```
-docker-compose.yml  deploy.sh  enable-https.sh  install-nginx-site.sh   <- uploaded by the workflow on every deploy
-install-forecast-cron.sh         run LOCALLY once: uploads the Earth Engine key and installs the 3-hourly forecast job
+docker-compose.yml  deploy.sh  run-forecast.sh  enable-https.sh  install-nginx-site.sh   <- uploaded by the workflow on every deploy
+install-forecast-cron.sh         run LOCALLY once: uploads the Earth Engine key + run-forecast.sh and installs the 3-hourly forecast job
 traefik/landslide.yml            routes/middlewares (rendered to traefik/dynamic/landslide.yml)
 nginx/landslide-host.conf.template   host-nginx site block (rendered to /etc/nginx/conf.d/landslide.conf)
 bootstrap-server.sh              one-time: compose plugin + folders (optional 1 GB swap); never touches nginx

@@ -160,7 +160,7 @@ jobs:
       - name: Upload deploy files
         run: |
           ssh $SSH_OPTS "$EC2_USER@$EC2_HOST" 'mkdir -p /opt/landslide/traefik /opt/landslide/nginx'
-          scp $SSH_OPTS apps/deploy/docker-compose.yml apps/deploy/deploy.sh apps/deploy/enable-https.sh apps/deploy/install-nginx-site.sh "$EC2_USER@$EC2_HOST":/opt/landslide/
+          scp $SSH_OPTS apps/deploy/docker-compose.yml apps/deploy/deploy.sh apps/deploy/run-forecast.sh apps/deploy/enable-https.sh apps/deploy/install-nginx-site.sh "$EC2_USER@$EC2_HOST":/opt/landslide/
           scp $SSH_OPTS apps/deploy/traefik/landslide.yml "$EC2_USER@$EC2_HOST":/opt/landslide/traefik/
           scp $SSH_OPTS apps/deploy/nginx/landslide-host.conf.template "$EC2_USER@$EC2_HOST":/opt/landslide/nginx/
       - name: Pull images and restart
@@ -176,6 +176,19 @@ jobs:
       - name: Smoke test through Traefik (on the server)
         run: |
           ssh $SSH_OPTS "$EC2_USER@$EC2_HOST" 'set -a; . /opt/landslide/.env.local; set +a; H="Host: ${DOMAIN:-landslide.spadace.com}"; B="http://127.0.0.1:${TRAEFIK_PORT:-8088}"; curl -fsS -H "$H" "$B/api/health" && curl -fsS -o /dev/null -H "$H" "$B/api/status" && curl -fsS -o /dev/null -H "$H" "$B/"'
+      - name: Data check (warns, does not fail the release)
+        # The images carry code only: the map layers, the forecast and the scored map are private and are uploaded with
+        # apps/deploy/sync-data.sh. A release can therefore be healthy while its data is missing or stale; say so here.
+        run: |
+          ssh $SSH_OPTS "$EC2_USER@$EC2_HOST" 'set -a; . /opt/landslide/.env.local; set +a; H="Host: ${DOMAIN:-landslide.spadace.com}"; B="http://127.0.0.1:${TRAEFIK_PORT:-8088}"
+            code=$(curl -s -o /dev/null -w "%{http_code}" -H "$H" "$B/api/impact/tambons"); echo "tambon layer: HTTP $code"
+            [ "$code" = 200 ] || echo "::warning title=Tambon layer missing::/api/impact/tambons returned $code - run apps/deploy/sync-data.sh and restart the backend"
+            run=$(curl -s -H "$H" "$B/api/status" | grep -oE "GFS run [0-9]{4}-[0-9]{2}-[0-9]{2}" | head -1 | cut -d" " -f3)
+            if [ -z "$run" ]; then echo "::warning title=No forecast::the API reports no GFS run"
+            else
+              age=$(( ( $(date +%s) - $(date -d "$run" +%s) ) / 86400 )); echo "forecast run $run ($age days old)"
+              [ "$age" -le 2 ] || echo "::warning title=Forecast is stale::GFS run $run is $age days old - enable apps/deploy/install-forecast-cron.sh"
+            fi'
       - name: Clean up key
         if: always()
         run: rm -f ~/.ssh/deploy_key ~/.ssh/known_hosts

@@ -6,7 +6,7 @@ Three parts, all read-only against the pipeline's outputs (`data/`, `models/`, `
 |---|---|---|
 | API | `apps/backend` | FastAPI. Serves the precomputed susceptibility map, exposure layers, live forecast, impact overlay and what-if scenario. It never runs the model: the map is scored offline by `scripts/predict_susceptibility_grid.py`. |
 | Dashboard | `apps/frontend` | Next.js, Tailwind and MapLibre. |
-| Forecast job | `apps/forecast` | One-shot container: `run_live_gfs_forecast.py` then `refresh_impact_overlay.py`. Run by cron on the server. |
+| Forecast job | `apps/forecast` | One-shot container: `run_live_gfs_forecast.py` then `refresh_impact_overlay.py`. Run every 3 hours by cron on the server through `run-forecast.sh`, which falls back to the last good forecast if a run fails. |
 
 Deployment, Docker and CI/CD are in `apps/deploy/README.md`. Live: https://landslide.spadace.com
 
@@ -33,7 +33,7 @@ project root).
 | `GET /api/impact/tambons` | The 1,055 tambon polygons (simplified), joined on the map by `GID_3` |
 | `GET /api/impact/overlay` | Per tambon and province: terrain tier, forecast rain and its class, live impact class, exposure |
 | `GET /api/impact/scenario?rain_24h_mm=&province=&limit=&classes=` | What-if: replaces the 24 h rain in scope and re-applies the impact rule; `classes=true` adds every tambon's classes for the map |
-| `GET /api/impact/live-forecast` | GFS 24 / 48 / 72 h rain per tambon and its classes |
+| `GET /api/impact/live-forecast` | GFS 24 / 48 / 72 / 96 / 120 h rain per tambon and its classes |
 | `GET /api/impact/buildings.pmtiles` | Building footprints as vector tiles, read with HTTP range requests |
 | `GET /api/impact/boundary`, `/facilities`, `/susceptibility`, `/population` | Province outline, facility points, scored training/test points, WorldPop summary |
 | `GET /api/impact/buildings?bbox…`, `/susceptibility-grid?bbox…` | Bounding-box queries kept for analysis; the dashboard no longer uses them (the buildings one needs the 140 MB GeoJSON and about 1.4 GB of RAM) |
