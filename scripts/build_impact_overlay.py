@@ -211,8 +211,10 @@ def main():
     log("Joining the GFS forecast ...")
     live = json.loads(LIVE_PATH.read_text())
     fc = pd.DataFrame(live["tambons"]).set_index("GID_3")
-    out = out.join(fc[["gfs_rain_24h_mm", "gfs_rain_48h_mm", "gfs_rain_72h_mm", "gfs_peak_hourly_mm_24h", "rain_class_24h",
-                       "local_p75_mm", "local_p90_mm", "local_p95_mm", "rain_local_class_24h"]])
+    rain_cols = ["gfs_rain_24h_mm", "gfs_rain_48h_mm", "gfs_rain_72h_mm", "gfs_rain_96h_mm", "gfs_rain_120h_mm",
+                 "gfs_peak_hourly_mm_24h", "rain_class_24h", "local_p75_mm", "local_p90_mm", "local_p95_mm",
+                 "rain_local_class_24h"]
+    out = out.join(fc[[c for c in rain_cols if c in fc.columns]])      # forecasts from before the 5-day windows lack 96/120 h
     if RAIN_BASIS == "percentile":
         rain_idx = out["rain_local_class_24h"].map(LOCAL_INDEX)
     else:
@@ -271,6 +273,7 @@ def main():
         "forecast_window_start_utc": live.get("window_start_utc"),
         "forecast_window_24h_end_utc": live.get("window_24h_end_utc"),
         "forecast_window_72h_end_utc": live.get("window_72h_end_utc"),
+        "forecast_window_120h_end_utc": live.get("window_120h_end_utc"),
         "susceptibility_grid_points": int(len(grid)),
         "totals": totals,
         "tier_breaks_pct_cells_high_vh": TIER_BREAKS,

@@ -113,6 +113,8 @@ export interface TambonForecast {
   gfs_rain_24h_mm: number | null;
   gfs_rain_48h_mm: number | null;
   gfs_rain_72h_mm: number | null;
+  gfs_rain_96h_mm?: number | null;
+  gfs_rain_120h_mm?: number | null;
   gfs_peak_hourly_mm_24h: number | null;
   rain_class_24h: string;
   local_p75_mm: number | null;
@@ -127,6 +129,7 @@ export interface LiveForecast {
   window_start_utc: string;
   window_24h_end_utc: string;
   window_72h_end_utc: string;
+  window_120h_end_utc?: string;
   rain_classes_mm_24h: { class: string; from_mm: number }[];
   summary: {
     tambons: number;
@@ -158,6 +161,8 @@ export interface OverlayTambon {
   gfs_rain_24h_mm: number | null;
   gfs_rain_48h_mm: number | null;
   gfs_rain_72h_mm: number | null;
+  gfs_rain_96h_mm?: number | null;
+  gfs_rain_120h_mm?: number | null;
   rain_class_24h: string;
   local_p75_mm?: number | null;
   local_p90_mm?: number | null;

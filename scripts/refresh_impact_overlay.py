@@ -26,7 +26,8 @@ RAIN_INDEX = {"light": 0, "moderate": 1, "heavy": 2, "very_heavy": 3}           
 LOCAL_INDEX = {"below_p75": 0, "p75_p90": 1, "p90_p95": 2, "above_p95": 3}              # rain_basis "percentile"
 HIGH_CLASSES = ("high", "very_high")
 IMPACT_ORDER = ["very_high", "high", "moderate", "low", "not_assessed"]
-RAIN_COLUMNS = ["gfs_rain_24h_mm", "gfs_rain_48h_mm", "gfs_rain_72h_mm", "gfs_peak_hourly_mm_24h", "rain_class_24h",
+RAIN_COLUMNS = ["gfs_rain_24h_mm", "gfs_rain_48h_mm", "gfs_rain_72h_mm", "gfs_rain_96h_mm", "gfs_rain_120h_mm",
+                "gfs_peak_hourly_mm_24h", "rain_class_24h",
                 "local_p75_mm", "local_p90_mm", "local_p95_mm", "rain_local_class_24h"]
 PROVINCE_SUMS = ["area_km2", "buildings_total", "buildings_high_vh", "population_total", "population_high_vh",
                  "facilities_total", "facilities_high_vh", "critical_facilities_total", "critical_facilities_high_vh",
@@ -84,6 +85,7 @@ def refresh(overlay, live):
             "forecast_window_start_utc": live.get("window_start_utc"),
             "forecast_window_24h_end_utc": live.get("window_24h_end_utc"),
             "forecast_window_72h_end_utc": live.get("window_72h_end_utc"),
+            "forecast_window_120h_end_utc": live.get("window_120h_end_utc"),
             "rain_classes_mm_24h": live.get("rain_classes_mm_24h"),
             "rain_local_classes": live.get("local_classes", meta.get("rain_local_classes")),
             "totals": totals}

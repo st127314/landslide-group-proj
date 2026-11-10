@@ -13,9 +13,10 @@ project's landslide inventory (its dates cannot support a calibration, see docs/
 transparent triage rule, not a validated landslide forecast. `build_impact_overlay.py` chooses which classes drive the
 live impact (`RAIN_BASIS`, default: local percentiles).
 
-How rainfall is computed. The `NOAA/GFS0P25` collection holds one image per forecast hour (hourly to +120 h) with
-`precipitation_rate` (kg/m^2/s = mm/s, an instantaneous rate). Each hour's rainfall is approximated as
-rate x 3600 s and the hours are summed. GFS cells are 0.25 deg (~28 km), so a tambon gets the value of the cell that
+How rainfall is computed. The `NOAA/GFS0P25` collection holds one image per forecast step (hourly to +120 h, every
+3 h up to +384 h) with `precipitation_rate` (kg/m^2/s = mm/s). Each step's rainfall is approximated as
+rate x the seconds of the step inside the window, and the steps are summed into cumulative totals for the next
+24, 48, 72, 96 and 120 h (5 days; days 4 and 5 rest on the 3-hourly steps). GFS cells are 0.25 deg (~28 km), so a tambon gets the value of the cell that
 contains its representative point; local convective extremes are smoothed out.
 
 Run:   python scripts/run_live_gfs_forecast.py          (needs earthengine-api, pandas; Earth Engine credentials)
@@ -41,8 +42,9 @@ SERVICE_ACCOUNT_KEY = Path(os.getenv("GEE_KEY_FILE") or PROJECT_DIR / "scripts" 
 TAMBON_POINTS_CSV = PROJECT_DIR / "data" / "boundary" / "southern_thailand_tambon_points.csv"
 OUTPUT_DIR = PROJECT_DIR / "results" / "live_forecast"
 GFS_ASSET = "NOAA/GFS0P25"
-WINDOWS_H = (24, 48, 72)
-HOURLY_LIMIT_H = 120          # GFS images are hourly up to +120 h on Earth Engine
+WINDOWS_H = (24, 48, 72, 96, 120)     # cumulative totals from now: the next 1 to 5 days
+HOURLY_LIMIT_H = 120          # GFS images are hourly up to +120 h on Earth Engine, then every 3 h up to +384 h
+FORECAST_LIMIT_H = 384
 SAMPLE_BATCH = 400
 # 24-hour rainfall classes, in mm: (lower bound inclusive, name). Daily-rainfall categories of this kind are
 # widely used; they are ASSUMED thresholds here -- edit as needed.
@@ -88,11 +90,22 @@ def latest_gfs_run(now):
     return run, datetime.fromtimestamp(creation_ms / 1000, tz=timezone.utc)
 
 
-def accumulation_image(run, first_hour, last_hour):
-    """Sum of hourly rainfall (rate x 3600) over forecast hours first_hour..last_hour, in mm."""
-    hours = run.filter(ee.Filter.And(ee.Filter.gte("forecast_hours", first_hour),
-                                     ee.Filter.lte("forecast_hours", last_hour)))
-    return hours.select("precipitation_rate").map(lambda img: img.multiply(3600)).sum()
+def accumulation_image(run, start_hour, hours):
+    """Rainfall in mm over the `hours` forecast hours that follow forecast hour start_hour - 1.
+
+    Each image holds the rate for the step that ends at its forecast hour: 1 h up to +120 h, 3 h after that. Every
+    image is weighted by how many seconds of its step fall inside the window, so a window that crosses +120 h (days 4
+    and 5, which start about +10 h into the run) is exact at the hourly steps and apportioned across the 3-hourly ones.
+    """
+    first, last = start_hour - 1, start_hour - 1 + hours
+    steps = run.filter(ee.Filter.And(ee.Filter.gt("forecast_hours", first), ee.Filter.lt("forecast_hours", last + 3)))
+
+    def weighted(img):
+        fh = ee.Number(img.get("forecast_hours"))
+        step = ee.Number(ee.Algorithms.If(fh.lte(HOURLY_LIMIT_H), 1, 3))
+        overlap = fh.min(last).subtract(fh.subtract(step).max(first)).max(0)
+        return img.select("precipitation_rate").multiply(overlap.multiply(3600))
+    return steps.map(weighted).sum()
 
 
 def main():
@@ -101,11 +114,11 @@ def main():
     run, init = latest_gfs_run(now)
     # first forecast hour that is still in the future, so "next 24 h" really starts now
     start_hour = max(1, math.ceil((now - init).total_seconds() / 3600))
-    if start_hour + max(WINDOWS_H) > HOURLY_LIMIT_H:
-        raise SystemExit(f"GFS run {init.isoformat()} is too old: needs hourly steps to +{start_hour + max(WINDOWS_H)} h")
+    if start_hour + max(WINDOWS_H) > FORECAST_LIMIT_H:
+        raise SystemExit(f"GFS run {init.isoformat()} is too old: needs forecast steps to +{start_hour + max(WINDOWS_H)} h")
     print(f"GFS run {init.isoformat()} | now {now.isoformat()} | first future forecast hour +{start_hour} h", flush=True)
 
-    bands = [accumulation_image(run, start_hour, start_hour + h - 1).rename(f"rain_{h}h_mm") for h in WINDOWS_H]
+    bands = [accumulation_image(run, start_hour, h).rename(f"rain_{h}h_mm") for h in WINDOWS_H]
     peak = run.filter(ee.Filter.And(ee.Filter.gte("forecast_hours", start_hour),
                                     ee.Filter.lte("forecast_hours", start_hour + WINDOWS_H[0] - 1))
                       ).select("precipitation_rate").map(lambda img: img.multiply(3600)).max().rename("peak_hourly_mm_24h")
@@ -141,6 +154,7 @@ def main():
             "GID_3": r.GID_3, "NAME_3": r.NAME_3 if isinstance(r.NAME_3, str) else None,
             "NAME_2": r.NAME_2, "NAME_1": r.NAME_1, "lon": r.sample_lon, "lat": r.sample_lat,
             "gfs_rain_24h_mm": r24, "gfs_rain_48h_mm": mm["rain_48h_mm"], "gfs_rain_72h_mm": mm["rain_72h_mm"],
+            "gfs_rain_96h_mm": mm["rain_96h_mm"], "gfs_rain_120h_mm": mm["rain_120h_mm"],
             "gfs_peak_hourly_mm_24h": mm["peak_hourly_mm_24h"],
             "rain_class_24h": rain_class(r24) if r24 is not None else "no_data",
             "local_p75_mm": p75, "local_p90_mm": p90, "local_p95_mm": p95,
@@ -156,20 +170,25 @@ def main():
         "window_start_utc": (init + timedelta(hours=start_hour)).isoformat(),
         "window_24h_end_utc": (init + timedelta(hours=start_hour + 24)).isoformat(),
         "window_72h_end_utc": (init + timedelta(hours=start_hour + 72)).isoformat(),
-        "forecast_hours_used": {"first": start_hour, "last_24h": start_hour + 23, "last_72h": start_hour + 71},
+        "window_120h_end_utc": (init + timedelta(hours=start_hour + 120)).isoformat(),
+        "forecast_hours_used": {"first": start_hour, "last_24h": start_hour + 23, "last_72h": start_hour + 71,
+                                "last_120h": start_hour + 119},
         "rain_classes_mm_24h": [{"class": name, "from_mm": lower} for lower, name in RAIN_CLASSES],
         "local_classes": {"names": LOCAL_CLASSES, "thresholds_file": "data/external/rain_percentiles_24h_tambon.csv",
                           "meaning": "24 h forecast vs the tambon's own wet-day (>= 1 mm) 24 h rainfall percentiles P75/P90/P95, "
                                      "CHIRPS 1991-2020 averaged onto the 0.25 deg GFS grid"},
         "summary": {"tambons": len(results), "tambons_by_class_24h": counts, "tambons_by_local_class_24h": local_counts,
                     "max_24h_mm": r24s[-1] if r24s else None, "median_24h_mm": r24s[len(r24s) // 2] if r24s else None},
-        "method": "Sum over forecast hours of GFS precipitation_rate x 3600 s from the first future forecast hour; "
+        "method": "Sum over forecast steps of GFS precipitation_rate x the seconds of each step inside the window, from the "
+                  "first future forecast hour (cumulative totals for the next 24, 48, 72, 96 and 120 h); "
                   "value of the 0.25 deg cell containing each tambon's representative point; the 24 h total is "
                   "classed against fixed mm thresholds and against the tambon's wet-day rainfall percentiles.",
         "limitations": [
             "GFS is a global weather model on a 0.25 degree (~28 km) grid: local convective extremes are smoothed, "
             "and any single forecast run can be wrong in timing and amount.",
-            "Hourly rainfall is approximated as the instantaneous rate at each forecast hour x 3600 s.",
+            "Rainfall is approximated as the rate at each forecast step x the length of the step (1 h up to +120 h of the "
+            "run, 3 h after that), so days 4 and 5 rest on the coarser steps and on a longer lead time: treat them as an "
+            "outlook, not a warning.",
             "The rainfall classes (absolute mm and local percentiles) are not calibrated on landslide records (this "
             "project's inventory dates are satellite-image dates and cannot support a calibration). Local percentiles "
             "say how unusual the rain is for the place, not whether it triggers landslides. The live-impact class is "

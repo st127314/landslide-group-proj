@@ -1,4 +1,5 @@
 """Tests for scripts/refresh_impact_overlay.py, the light overlay refresh the server runs after each forecast."""
+import json
 from pathlib import Path
 import sys
 import unittest
@@ -19,6 +20,7 @@ def tambon(gid, province, tier, pop_hv):
 
 def forecast(gid, mm, local_class):
     return {"GID_3": gid, "gfs_rain_24h_mm": mm, "gfs_rain_48h_mm": mm, "gfs_rain_72h_mm": mm,
+            "gfs_rain_96h_mm": mm + 5, "gfs_rain_120h_mm": mm + 10,
             "gfs_peak_hourly_mm_24h": 1.0, "rain_class_24h": "heavy", "local_p75_mm": 10.0, "local_p90_mm": 20.0,
             "local_p95_mm": 30.0, "rain_local_class_24h": local_class}
 
@@ -26,10 +28,22 @@ def forecast(gid, mm, local_class):
 OVERLAY = {"metadata": {"rain_basis": "percentile", "totals": {"tambons": 3, "population_total": 3000}},
            "tambons": [tambon("A", "P1", "high", 500), tambon("B", "P1", "low", 100), tambon("C", "P2", "no_data", 0)]}
 LIVE = {"gfs_run_utc": "2026-11-01T00:00:00+00:00", "generated_utc": "2026-11-01T05:00:00+00:00",
+        "window_120h_end_utc": "2026-11-06T06:00:00+00:00",
         "tambons": [forecast("A", 50.0, "above_p95"), forecast("B", 50.0, "above_p95"), forecast("C", 50.0, "above_p95")]}
 
 
 class RefreshOverlayTests(unittest.TestCase):
+    def test_five_day_totals_and_window_end_are_carried_into_the_overlay(self):
+        out = refresh(json.loads(json.dumps(OVERLAY)), LIVE)
+        row = next(t for t in out["tambons"] if t["GID_3"] == "A")
+        self.assertEqual((row["gfs_rain_96h_mm"], row["gfs_rain_120h_mm"]), (55.0, 60.0))
+        self.assertEqual(out["metadata"]["forecast_window_120h_end_utc"], LIVE["window_120h_end_utc"])
+
+    def test_a_forecast_without_the_five_day_totals_still_refreshes(self):
+        old = {**LIVE, "tambons": [{k: v for k, v in t.items() if k not in ("gfs_rain_96h_mm", "gfs_rain_120h_mm")} for t in LIVE["tambons"]]}
+        out = refresh(json.loads(json.dumps(OVERLAY)), old)
+        self.assertNotIn("gfs_rain_120h_mm", out["tambons"][0])
+
     def test_rule_matches_the_documented_bins(self):
         self.assertEqual(impact_class("low", 1), "low")
         self.assertEqual(impact_class("moderate", 1), "moderate")

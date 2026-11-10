@@ -7,7 +7,7 @@ A landslide susceptibility model plus a live-impact view for the 14 southern pro
 The project has three parts:
 
 1. **Susceptibility model** — where is terrain prone to landslides? (20 conditioning factors, 6,180 landslide + 6,180 paired non-landslide points, spatial cross-validation, calibrated scores, 250 m map.) **This is the validated part of the project.**
-2. **Live forecast rainfall** — NOAA GFS rainfall for the next 24 / 48 / 72 h per tambon, judged against each tambon's own rainfall climate (wet-day percentiles P75/P90/P95 from 30 years of CHIRPS). No machine-learning model: an exploratory rainfall model was tried and shown to have no skill (hold-out ROC-AUC 0.34; `notebooks/rainfall_trigger_threshold.ipynb`, kept as a documented negative result).
+2. **Live forecast rainfall** — NOAA GFS rainfall for the next 24 / 48 / 72 / 96 / 120 h (5 days) per tambon, judged against each tambon's own rainfall climate (wet-day percentiles P75/P90/P95 from 30 years of CHIRPS). No machine-learning model: an exploratory rainfall model was tried and shown to have no skill (hold-out ROC-AUC 0.34; `notebooks/rainfall_trigger_threshold.ipynb`, kept as a documented negative result).
 3. **Live impact overlay and what-if scenario** — terrain factor × local rain class → impact class per tambon, plus a "what if X mm falls?" scenario (no extra model); with the buildings, facilities and people at elevated risk, shown per tambon on the dashboard map. A transparent triage rule, **not a validated landslide forecast**.
 
 Read `docs/METHODS.md` first for how everything was built and, importantly, its **Known issues** section before relying on any number here.
@@ -71,7 +71,7 @@ models/
   rainfall_trigger/        exploratory rainfall model (no skill; not used by the live pipeline)
 results/
   susceptibility_map/      250 m scored grid (CSV + GeoTIFF), the PNG the web map draws, and metadata
-  live_forecast/           latest GFS rainfall forecast per tambon (24/48/72 h) and its rain class
+  live_forecast/           latest GFS rainfall forecast per tambon (24 h to 5 days) and its rain class
   impact_overlay/          per-tambon / per-province / per-facility exposure and combined class
   figures/                 report-ready PNG figures
 notebooks/                 the two modelling notebooks (+ susc_utils.py needed to load the pickled model)

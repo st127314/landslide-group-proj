@@ -20,7 +20,7 @@
 
 ## 3. Live rainfall forecast (GFS) — and the rainfall model that was dropped
 
-**Live forecast** (`scripts/run_live_gfs_forecast.py`, about 10 s, no model). For each of the 1,055 tambons it sums NOAA GFS forecast rainfall over the next 24, 48 and 72 hours **counted from now** (not from the model's initialisation time), using Earth Engine's `NOAA/GFS0P25` (hourly steps to +120 h, `precipitation_rate` × 3600 s per hour, value of the 0.25° ≈ 28 km cell containing each tambon's representative point). The 24 h total is classed two ways:
+**Live forecast** (`scripts/run_live_gfs_forecast.py`, about 10 s, no model). For each of the 1,055 tambons it sums NOAA GFS forecast rainfall over the next 24, 48, 72, 96 and 120 hours (5 days) **counted from now** (not from the model's initialisation time), using Earth Engine's `NOAA/GFS0P25` (`precipitation_rate` × the seconds of each step inside the window: hourly steps to +120 h of the run, 3-hourly after, so days 4 and 5 rest on coarser steps and a longer lead time and are an outlook; value of the 0.25° ≈ 28 km cell containing each tambon's representative point). Only the 24 h total drives the class. The 24 h total is classed two ways:
 
 - **Local classes (drive the live impact).** Against the tambon's own wet-day rainfall percentiles: below P75, P75–P90, P90–P95, above P95. The thresholds come from `scripts/compute_rain_percentiles.py`: 30 years (1991–2020) of CHIRPS daily rain, averaged onto the 0.25° GFS grid so they describe cell-average rainfall like the forecast, wet day = at least 1 mm (53% of days on average), percentiles of those wet days, sampled at each tambon's point (`data/external/rain_percentiles_24h_tambon.csv`). Typical values (median tambon): P75 15.7 mm, P90 26.6, P95 37.6, P99 66.5; the wettest Andaman-side tambons need roughly twice as much as the driest to count as unusual. A wet-day P90 is exceeded on about 5% of all days, so "above P95" means roughly 10 days a year, not an extreme event.
 - **Absolute classes (kept for reference).** Light < 10 mm, moderate 10–35, heavy 35–90, very heavy ≥ 90 mm (assumed thresholds, editable in the script). `RAIN_BASIS` in `build_impact_overlay.py` switches the overlay between the two.
@@ -36,7 +36,7 @@ Neither set is calibrated on landslide records. Local percentiles say **how unus
 | Input | Use |
 |---|---|
 | Susceptibility grid (1.14 M cells) | % of cells high/very high → **terrain tier** (< 15% low, 15–40% moderate, ≥ 40% high) |
-| `results/live_forecast/latest.json` | GFS 24 / 48 / 72 h rainfall, its class against the tambon's local percentiles (and the fixed class) |
+| `results/live_forecast/latest.json` | GFS 24 / 48 / 72 / 96 / 120 h rainfall, its class against the tambon's local percentiles (and the fixed class) |
 | OSM buildings (426,519), OSM facilities (3,895), WorldPop 2020 constrained (9.39 M people) | each item takes the class of its nearest grid cell (≤ 400 m); counts per class and in high/very-high |
 
 **Live impact class** = terrain factor × 24 h local rain-class index. Terrain factor: low tier 1, moderate 2, high 3 (tier from the share of the tambon's 250 m cells that are high/very high: < 15%, 15–40%, ≥ 40%). Rain index: below P75 = 0, P75–P90 = 1, P90–P95 = 2, above P95 = 3. Product bins: 0–1 low, 2–3 moderate, 4–6 high, ≥ 7 very high:

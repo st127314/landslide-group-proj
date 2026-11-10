@@ -7,6 +7,7 @@ import type { FeatureCollection } from "geojson";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { Protocol } from "pmtiles";
 import { ChevronDown, Layers as LayersIcon, List, MapPin, MapPinned, Search, TriangleAlert, X } from "lucide-react";
+import { ageLabel, isStale } from "@/lib/time";
 import { api, type ImpactOverlay, type OverlayTambon, type ScenarioResult, type TambonClasses } from "@/lib/api";
 
 // Served from public/ (copied there by scripts/copy-maplibre-worker.mjs): the bundle does not ship the worker.
@@ -648,7 +649,8 @@ export default function ImpactMap() {
                         timeStyle: "short",
                         timeZone: "UTC",
                       })}{" "}
-                      UTC, next 24 h.
+                      UTC ({ageLabel(overlay.metadata.gfs_run_utc)}), next 24 h.
+                      {isStale(overlay.metadata.gfs_run_utc) && <span className="ml-1 font-medium" style={{ color: "var(--danger-fg)" }}>Forecast is stale.</span>}
                     </p>
                   )}
                 </div>
@@ -864,7 +866,10 @@ function describe(
     ["Terrain tier", `${classLabel("tier", t.susceptibility_tier)}${share}`],
     [whatIfMm === null ? "Rain, next 24 h" : "What-if rain, 24 h", `${mm(rain)} (${classLabel("rain", rainClass)})`],
   ];
-  if (whatIfMm === null) risk.push(["Rain, next 72 h", mm(t.gfs_rain_72h_mm)]);
+  if (whatIfMm === null) {
+    risk.push(["Rain, next 3 days", mm(t.gfs_rain_72h_mm)]);
+    if (t.gfs_rain_120h_mm != null) risk.push(["Rain, next 5 days (outlook)", mm(t.gfs_rain_120h_mm)]);
+  }
   risk.push(["Local P75 / P90 / P95", `${mm(t.local_p75_mm, 0)} / ${mm(t.local_p90_mm, 0)} / ${mm(t.local_p95_mm, 0)}`.replace(/ mm \//g, " /")]);
   const sections: Details["sections"] = [
     { heading: "Risk", rows: risk },
