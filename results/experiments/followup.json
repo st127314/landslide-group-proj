@@ -1,0 +1,505 @@
+{
+ "F1": {
+  "near_duplicate_m": 30.0,
+  "close_pairs": 335,
+  "landslides_removed": 290,
+  "rows_before": 12360,
+  "rows_after": 11780,
+  "holdout_rows": {
+   "before": 2628,
+   "after": 2468
+  },
+  "lr": {
+   "all_points": {
+    "auc_folds": [
+     0.9213,
+     0.9543,
+     0.9494,
+     0.9056,
+     0.95
+    ],
+    "auc_mean": 0.9361,
+    "auc_sd": 0.0215,
+    "pr_mean": 0.9221,
+    "holdout_auc": 0.9212
+   },
+   "thinned": {
+    "auc_folds": [
+     0.9238,
+     0.9556,
+     0.9499,
+     0.9085,
+     0.9524
+    ],
+    "auc_mean": 0.938,
+    "auc_sd": 0.0208,
+    "pr_mean": 0.9234,
+    "holdout_auc": 0.922
+   }
+  },
+  "svm": {
+   "all_points": {
+    "auc_folds": [
+     0.925,
+     0.9652,
+     0.9535,
+     0.8554,
+     0.9444
+    ],
+    "auc_mean": 0.9287,
+    "auc_sd": 0.0435,
+    "pr_mean": 0.9082,
+    "holdout_auc": 0.9397
+   },
+   "thinned": {
+    "auc_folds": [
+     0.9251,
+     0.9665,
+     0.9535,
+     0.8583,
+     0.948
+    ],
+    "auc_mean": 0.9303,
+    "auc_sd": 0.0429,
+    "pr_mean": 0.9102,
+    "holdout_auc": 0.9398
+   }
+  },
+  "rf": {
+   "all_points": {
+    "auc_folds": [
+     0.9032,
+     0.9631,
+     0.952,
+     0.8458,
+     0.9554
+    ],
+    "auc_mean": 0.9239,
+    "auc_sd": 0.0496,
+    "pr_mean": 0.8997,
+    "holdout_auc": 0.9313
+   },
+   "thinned": {
+    "auc_folds": [
+     0.9075,
+     0.9638,
+     0.9537,
+     0.8447,
+     0.9558
+    ],
+    "auc_mean": 0.9251,
+    "auc_sd": 0.0501,
+    "pr_mean": 0.8999,
+    "holdout_auc": 0.9286
+   }
+  }
+ },
+ "F2": {
+  "n_cells_heldout_area": 69282,
+  "n_heldout_landslides": 1123,
+  "n_heldout_landslides_on_grid": 1120,
+  "quartiles_training_vs_grid": {
+   "ndvi": {
+    "training": [
+     0.703,
+     0.784,
+     0.836
+    ],
+    "grid": [
+     0.338,
+     0.569,
+     0.732
+    ]
+   },
+   "upstream_area_km2": {
+    "training": [
+     0.211,
+     0.212,
+     0.635
+    ],
+    "grid": [
+     0.011,
+     0.023,
+     0.109
+    ]
+   },
+   "twi": {
+    "training": [
+     6.894,
+     7.799,
+     9.283
+    ],
+    "grid": [
+     6.78,
+     8.048,
+     9.536
+    ]
+   },
+   "spi": {
+    "training": [
+     123.036,
+     267.738,
+     530.572
+    ],
+    "grid": [
+     8.514,
+     34.542,
+     122.874
+    ]
+   }
+  },
+  "ndvi_below_0.6": {
+   "training": 0.101,
+   "grid": 0.543
+  },
+  "lr": {
+   "all_factors": {
+    "cv": {
+     "auc_folds": [
+      0.9213,
+      0.9543,
+      0.9494,
+      0.9056,
+      0.95
+     ],
+     "auc_mean": 0.9361,
+     "auc_sd": 0.0215,
+     "pr_mean": 0.9221
+    },
+    "holdout_auc": 0.9212,
+    "top20": 0.6536,
+    "top10": 0.3589,
+    "cell_top20": 0.5866,
+    "cell_top10": 0.2589
+   },
+   "without_ndvi": {
+    "cv": {
+     "auc_folds": [
+      0.8771,
+      0.9273,
+      0.9402,
+      0.8825,
+      0.9447
+     ],
+     "auc_mean": 0.9143,
+     "auc_sd": 0.0322,
+     "pr_mean": 0.8953
+    },
+    "holdout_auc": 0.8904,
+    "top20": 0.7507,
+    "top10": 0.3927,
+    "cell_top20": 0.5893,
+    "cell_top10": 0.292
+   },
+   "without_ndvi_hydrology": {
+    "cv": {
+     "auc_folds": [
+      0.8787,
+      0.9325,
+      0.9403,
+      0.8855,
+      0.9456
+     ],
+     "auc_mean": 0.9165,
+     "auc_sd": 0.0319,
+     "pr_mean": 0.8974
+    },
+    "holdout_auc": 0.89,
+    "top20": 0.7516,
+    "top10": 0.3918,
+    "cell_top20": 0.5893,
+    "cell_top10": 0.2911
+   },
+   "terrain_only": {
+    "cv": {
+     "auc_folds": [
+      0.928,
+      0.9349,
+      0.9439,
+      0.8775,
+      0.9469
+     ],
+     "auc_mean": 0.9262,
+     "auc_sd": 0.0282,
+     "pr_mean": 0.9014
+    },
+    "holdout_auc": 0.8881,
+    "top20": 0.7961,
+    "top10": 0.4693,
+    "cell_top20": 0.6188,
+    "cell_top10": 0.2875
+   }
+  },
+  "svm": {
+   "all_factors": {
+    "cv": {
+     "auc_folds": [
+      0.925,
+      0.9652,
+      0.9535,
+      0.8554,
+      0.9444
+     ],
+     "auc_mean": 0.9287,
+     "auc_sd": 0.0435,
+     "pr_mean": 0.9082
+    },
+    "holdout_auc": 0.9397,
+    "top20": 0.8789,
+    "top10": 0.6768,
+    "cell_top20": 0.6054,
+    "cell_top10": 0.3036
+   },
+   "without_ndvi": {
+    "cv": {
+     "auc_folds": [
+      0.8721,
+      0.9319,
+      0.9452,
+      0.8081,
+      0.9369
+     ],
+     "auc_mean": 0.8989,
+     "auc_sd": 0.0584,
+     "pr_mean": 0.8723
+    },
+    "holdout_auc": 0.8992,
+    "top20": 0.9341,
+    "top10": 0.8094,
+    "cell_top20": 0.6134,
+    "cell_top10": 0.3063
+   },
+   "without_ndvi_hydrology": {
+    "cv": {
+     "auc_folds": [
+      0.8656,
+      0.9322,
+      0.9442,
+      0.8169,
+      0.9403
+     ],
+     "auc_mean": 0.8998,
+     "auc_sd": 0.0563,
+     "pr_mean": 0.8742
+    },
+    "holdout_auc": 0.9001,
+    "top20": 0.6776,
+    "top10": 0.1407,
+    "cell_top20": 0.6205,
+    "cell_top10": 0.3357
+   },
+   "terrain_only": {
+    "cv": {
+     "auc_folds": [
+      0.9312,
+      0.9385,
+      0.9459,
+      0.8392,
+      0.952
+     ],
+     "auc_mean": 0.9214,
+     "auc_sd": 0.0466,
+     "pr_mean": 0.8916
+    },
+    "holdout_auc": 0.8924,
+    "top20": 0.8281,
+    "top10": 0.5049,
+    "cell_top20": 0.6545,
+    "cell_top10": 0.3312
+   }
+  }
+ },
+ "F3": {
+  "landslide_points": 6180,
+  "positive_cells": 3787,
+  "pairs_in_both_designs": 3435,
+  "without_match_in_caliper": 140,
+  "factors": [
+   "elevation",
+   "slope",
+   "aspect",
+   "curvature_general",
+   "curvature_profile",
+   "tri",
+   "tpi",
+   "ls_factor",
+   "upstream_area_km2",
+   "twi",
+   "spi",
+   "soil_texture",
+   "soil_clay_pct",
+   "soil_sand_pct",
+   "soil_bulk_density",
+   "lithology",
+   "dist_to_road",
+   "dist_to_river"
+  ],
+  "medians_landslide_vs_negative": {
+   "ring": {
+    "slope": [
+     26.0,
+     8.0
+    ],
+    "elevation": [
+     323.0,
+     74.0
+    ]
+   },
+   "matched": {
+    "slope": [
+     26.0,
+     26.0
+    ],
+    "elevation": [
+     323.0,
+     321.0
+    ]
+   }
+  },
+  "pair_distance_km_median": {
+   "ring": 8.3,
+   "matched": 59.0
+  },
+  "cv": {
+   "lr": {
+    "ring": {
+     "auc_folds": [
+      0.911,
+      0.8238,
+      0.9731,
+      0.9546,
+      0.7705
+     ],
+     "auc_mean": 0.8866,
+     "auc_sd": 0.0868,
+     "pr_mean": 0.8493
+    },
+    "matched": {
+     "auc_folds": [
+      0.5954,
+      0.3179,
+      0.556,
+      0.434,
+      0.5787
+     ],
+     "auc_mean": 0.4964,
+     "auc_sd": 0.1182,
+     "pr_mean": 0.494
+    }
+   },
+   "svm": {
+    "ring": {
+     "auc_folds": [
+      0.9271,
+      0.7999,
+      0.9572,
+      0.947,
+      0.7442
+     ],
+     "auc_mean": 0.8751,
+     "auc_sd": 0.0967,
+     "pr_mean": 0.8253
+    },
+    "matched": {
+     "auc_folds": [
+      0.517,
+      0.3496,
+      0.5512,
+      0.4486,
+      0.5851
+     ],
+     "auc_mean": 0.4903,
+     "auc_sd": 0.0935,
+     "pr_mean": 0.4841
+    }
+   },
+   "rf": {
+    "ring": {
+     "auc_folds": [
+      0.9075,
+      0.7802,
+      0.9354,
+      0.9559,
+      0.6929
+     ],
+     "auc_mean": 0.8544,
+     "auc_sd": 0.1132,
+     "pr_mean": 0.7962
+    },
+    "matched": {
+     "auc_folds": [
+      0.5143,
+      0.4378,
+      0.5793,
+      0.4541,
+      0.5754
+     ],
+     "auc_mean": 0.5122,
+     "auc_sd": 0.066,
+     "pr_mean": 0.4979
+    }
+   }
+  },
+  "ring_model_on_matched_negatives": {
+   "lr": {
+    "auc_folds": [
+     0.5656,
+     0.5246,
+     0.5503,
+     0.5824,
+     0.5339
+    ],
+    "auc_mean": 0.5513,
+    "auc_sd": 0.0234
+   },
+   "svm": {
+    "auc_folds": [
+     0.5753,
+     0.533,
+     0.482,
+     0.6047,
+     0.541
+    ],
+    "auc_mean": 0.5472,
+    "auc_sd": 0.0463
+   },
+   "rf": {
+    "auc_folds": [
+     0.5304,
+     0.5053,
+     0.4526,
+     0.5992,
+     0.5595
+    ],
+    "auc_mean": 0.5294,
+    "auc_sd": 0.0554
+   }
+  },
+  "terrain_only_lr": {
+   "ring": {
+    "auc_folds": [
+     0.8921,
+     0.8383,
+     0.9686,
+     0.9436,
+     0.7885
+    ],
+    "auc_mean": 0.8862,
+    "auc_sd": 0.0741,
+    "pr_mean": 0.8539
+   },
+   "matched": {
+    "auc_folds": [
+     0.5838,
+     0.528,
+     0.5568,
+     0.5586,
+     0.5823
+    ],
+    "auc_mean": 0.5619,
+    "auc_sd": 0.0228,
+    "pr_mean": 0.5333
+   }
+  }
+ }
+}
