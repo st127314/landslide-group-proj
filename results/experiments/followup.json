@@ -1,4 +1,86 @@
 {
+ "F0": {
+  "ndvi": {
+   "mean": 0.0604,
+   "sd": 0.0025
+  },
+  "elevation": {
+   "mean": 0.0437,
+   "sd": 0.0031
+  },
+  "ls_factor": {
+   "mean": 0.0119,
+   "sd": 0.0022
+  },
+  "dist_to_river": {
+   "mean": 0.011,
+   "sd": 0.0012
+  },
+  "tpi": {
+   "mean": 0.0096,
+   "sd": 0.0017
+  },
+  "curvature_profile": {
+   "mean": 0.0062,
+   "sd": 0.0014
+  },
+  "aspect": {
+   "mean": 0.0047,
+   "sd": 0.0008
+  },
+  "soil_sand_pct": {
+   "mean": 0.0034,
+   "sd": 0.0004
+  },
+  "tri": {
+   "mean": 0.0027,
+   "sd": 0.0014
+  },
+  "soil_texture": {
+   "mean": 0.0026,
+   "sd": 0.0003
+  },
+  "soil_clay_pct": {
+   "mean": 0.002,
+   "sd": 0.0006
+  },
+  "spi": {
+   "mean": 0.002,
+   "sd": 0.0005
+  },
+  "slope": {
+   "mean": 0.0019,
+   "sd": 0.0009
+  },
+  "twi": {
+   "mean": 0.0016,
+   "sd": 0.0009
+  },
+  "lithology": {
+   "mean": 0.0012,
+   "sd": 0.0011
+  },
+  "lulc": {
+   "mean": 0.0009,
+   "sd": 0.0004
+  },
+  "soil_bulk_density": {
+   "mean": 0.0005,
+   "sd": 0.0006
+  },
+  "curvature_general": {
+   "mean": 0.0003,
+   "sd": 0.001
+  },
+  "dist_to_road": {
+   "mean": -0.0007,
+   "sd": 0.0008
+  },
+  "upstream_area_km2": {
+   "mean": -0.0012,
+   "sd": 0.0003
+  }
+ },
  "F1": {
   "near_duplicate_m": 30.0,
   "close_pairs": 335,

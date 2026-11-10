@@ -1,5 +1,6 @@
-"""Follow-up experiments F1-F3, run after the progress report to close its open questions.
+"""Follow-up experiments F0-F3, run after the progress report to close its open questions.
 
+F0  Permutation importance of the selected SVM on the held-out fold (drop in ROC-AUC when one factor is shuffled).
 F1  Near-duplicate thinning. Landslide points closer than 30 m to an earlier one (and their paired negatives) are
     removed and the model comparison is repeated, to see how much double-counted scars flatter the scores.
 F2  Model without NDVI (and without hydrology). NDVI is partly a picture of the scar itself, and on the 250 m grid it
@@ -18,7 +19,7 @@ F3  Environment-matched negatives on the 250 m grid. The paired negatives are lo
     design, a model trained on the ring design is tested on the matched negatives, which asks the practical question:
     does a map trained against easy negatives still rank landslide cells above comparable slopes?
 
-Same folds, buffer and fixed hyperparameters as run_experiments.py. Run from the project root (about 1 minute):
+Same folds, buffer and fixed hyperparameters as run_experiments.py. Run from the project root (a few minutes):
     python notebooks/experiments/run_followup_experiments.py
 Needs data/processed/factor_grid_points/ (F2 decision value and F3) and geopandas (F3).
 Output: results/experiments/followup.json
@@ -27,6 +28,7 @@ import json, sys, time
 from pathlib import Path
 import numpy as np, pandas as pd
 from scipy.spatial import cKDTree
+from sklearn.inspection import permutation_importance
 from sklearn.metrics import roc_auc_score
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -56,6 +58,13 @@ def holdout_auc(setup, name, feats):
     p = model(name, feats).fit(setup.d.iloc[setup.train][feats], setup.y[setup.train])
     return round(float(roc_auc_score(setup.y[setup.test], score(p, setup.d.iloc[setup.test][feats]))), 4), p
 
+
+# ---- F0 permutation importance on the held-out fold
+svm = model('svm', ALL_FEATS).fit(d.iloc[S.train][ALL_FEATS], S.y[S.train])
+imp = permutation_importance(svm, d.iloc[S.test][ALL_FEATS], S.y[S.test], scoring='roc_auc', n_repeats=10, random_state=RS, n_jobs=-1)
+R['F0'] = {f: {'mean': round(float(m), 4), 'sd': round(float(sd), 4)}
+           for f, m, sd in sorted(zip(ALL_FEATS, imp.importances_mean, imp.importances_std), key=lambda r: -r[1])}
+print('F0', list(R['F0'].items())[:5], round(time.time() - t0), flush=True)
 
 # ---- F1 near-duplicate thinning
 pairs = {f['properties']['Event_ID']: f"LS_{f['properties']['paired_landslide_id']}"

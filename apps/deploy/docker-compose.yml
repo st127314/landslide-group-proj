@@ -30,7 +30,7 @@ services:
     read_only: true
     tmpfs: [/tmp]
     security_opt: ["no-new-privileges:true"]
-    mem_limit: 96m
+    mem_limit: 128m
     healthcheck:
       test: ["CMD", "traefik", "healthcheck", "--ping"]
       interval: 30s
