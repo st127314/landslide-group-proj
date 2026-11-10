@@ -18,6 +18,7 @@ SSH="ssh -i $KEY -o IdentitiesOnly=yes ${SSH_EXTRA:-}"
 # Exactly the files apps/backend/app/paths.py reads (the 270 MB factor grid is not needed).
 FILES=(
   "data/boundary/southern_thailand_web.geojson"   # slimmed by scripts/make_web_layers.py
+  "data/boundary/southern_thailand_tambons_web.geojson"
   "data/external/facilities_web.geojson"
   "data/external/worldpop_manifest.json"
   "data/boundary/southern_thailand_tambon_points.csv"   # forecast job inputs

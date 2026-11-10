@@ -27,7 +27,7 @@ LIMITATIONS = [
     "Rain is classed against each tambon's own wet-day rainfall percentiles (CHIRPS 1991-2020, on the GFS grid): this says "
     "how unusual the rain is for the place, not whether it triggers landslides. The thresholds are not calibrated on "
     "landslide records.",
-    "The impact class is a transparent triage rule (terrain tier + rain class), not a calibrated probability or a "
+    "The impact class is a transparent triage rule (terrain tier × rain class), not a calibrated probability or a "
     "validated landslide forecast; terrain susceptibility is a relative ranking.",
     "Exposure counts people, buildings and facilities on high / very-high susceptibility ground only (WorldPop 2020, OSM).",
 ]
@@ -53,12 +53,14 @@ def impact_class(tier, rain_index):
     return "low" if product <= 1 else "moderate" if product <= 3 else "high" if product <= 6 else "very_high"
 
 
-def run(overlay, rain_24h_mm=None, province=None, limit=25):
+def run(overlay, rain_24h_mm=None, province=None, limit=25, include_classes=False):
     """Evaluate the overlay under a scenario.
 
     rain_24h_mm None  -> the live GFS forecast already stored in the overlay (reproduces the overlay's own classes);
     otherwise         -> that amount replaces the 24 h rainfall of every tambon in `province` (all tambons if None);
                          tambons outside the province keep the live forecast.
+    include_classes   -> also return every tambon's classes keyed by GID_3 (for colouring the map), not only the top
+                         `limit` rows.
     """
     tambons = overlay["tambons"]
     rows = []
@@ -92,7 +94,10 @@ def run(overlay, rain_24h_mm=None, province=None, limit=25):
     ranked = sorted(rows, key=lambda r: (IMPACT_ORDER.index(r["impact_class"]), -r["population_at_elevated_risk"],
                                          -(r["rain_24h_mm"] or 0)))
     in_scope = [r for r in rows if r["in_scope"]]
+    classes = {"tambon_classes": {r["GID_3"]: [r["impact_class"], r["rain_local_class_24h"], r["rain_24h_mm"]]
+                                  for r in rows}} if include_classes else {}
     return {
+        **classes,
         "scenario": {
             "rain_24h_mm": rain_24h_mm, "province": province,
             "description": ("live GFS forecast (no scenario applied)" if rain_24h_mm is None else

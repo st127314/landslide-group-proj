@@ -48,6 +48,7 @@ EXTERNAL_MANIFEST_PATH = EXTERNAL_DIR / "manifest.json"
 # Pipeline outputs this API reports progress from (see /api/status).
 FACTOR_GRID_POINTS_DIR = PROCESSED_DIR / "factor_grid_points"  # 250 m point-sampled factor grid
 
-TAMBON_BOUNDARY_PATH = BOUNDARY_DIR / "southern_thailand_tambons.geojson"
+TAMBON_BOUNDARY_PATH = _web_layer(BOUNDARY_DIR / "southern_thailand_tambons_web.geojson",
+                                  BOUNDARY_DIR / "southern_thailand_tambons.geojson")
 LIVE_FORECAST_JSON = RESULTS_DIR / "live_forecast" / "latest.json"
 IMPACT_OVERLAY_JSON = RESULTS_DIR / "impact_overlay" / "impact_overlay.json"

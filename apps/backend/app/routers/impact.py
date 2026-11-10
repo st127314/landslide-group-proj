@@ -28,10 +28,8 @@ def boundary():
 
 @router.get("/susceptibility")
 def susceptibility():
-    """Point-level susceptibility scores (the sampled landslide/non-landslide
-    inventory, scored by the trained model). NOT the full raster susceptibility
-    map -- that still needs the factor-grid download + a grid prediction script
-    to finish; see /api/status."""
+    """Point-level susceptibility scores (the sampled landslide/non-landslide inventory, scored by the trained
+    model). The 250 m map itself is served by /susceptibility-raster.png and /susceptibility-at."""
     geojson = data.susceptibility_geojson()
     if geojson is None:
         raise HTTPException(status_code=404, detail="Susceptibility scores not found. Run the modeling notebook first.")
@@ -156,7 +154,7 @@ def tambons():
 def live_forecast():
     """GFS forecast rainfall per tambon (next 24 / 48 / 72 h from now) with its 24 h rainfall class, from
     scripts/run_live_gfs_forecast.py (run periodically -- this endpoint only reads the latest output, never
-    calls Earth Engine on the request path). The rainfall classes are assumed thresholds; read `limitations`."""
+    calls Earth Engine on the request path). The rain classes are not calibrated on landslides; read `limitations`."""
     result = data.live_forecast_data()
     if result is None:
         raise HTTPException(status_code=404,
@@ -182,9 +180,10 @@ def scenario(
                                        description="What-if 24 h rainfall in mm; omit for the live GFS forecast"),
     province: str | None = Query(None, description="Apply the rainfall to this province only (exact English name)"),
     limit: int = Query(25, ge=1, le=200),
+    classes: bool = Query(False, description="Also return [impact class, rain class, rain mm] for every tambon, keyed by GID_3"),
 ):
     """What-if rainfall scenario on the live-impact overlay: replaces the 24 h rainfall of every tambon in scope
-    (all tambons, or one province) with `rain_24h_mm`, then re-applies the overlay's rule (terrain tier + the rain
+    (all tambons, or one province) with `rain_24h_mm`, then re-applies the overlay's rule (terrain tier × the rain
     class against each tambon's own wet-day percentiles). Runs in memory on the stored overlay: no Earth Engine
     call, no model, no assistant. See `limitations` in the response."""
     overlay = data.impact_overlay_data()
@@ -193,7 +192,7 @@ def scenario(
     known = {t.get("NAME_1") for t in overlay["tambons"]}
     if province is not None and province not in known:
         raise HTTPException(status_code=422, detail=f"Unknown province {province!r}. Known: {sorted(k for k in known if k)}")
-    return scenario_logic.run(overlay, rain_24h_mm, province, limit)
+    return scenario_logic.run(overlay, rain_24h_mm, province, limit, include_classes=classes)
 
 
 @router.get("/population")

@@ -159,7 +159,9 @@ export interface OverlayTambon {
   gfs_rain_48h_mm: number | null;
   gfs_rain_72h_mm: number | null;
   rain_class_24h: string;
+  local_p75_mm?: number | null;
   local_p90_mm?: number | null;
+  local_p95_mm?: number | null;
   rain_local_class_24h?: string;
   live_impact_class: string;
   population_at_elevated_risk: number;
@@ -239,6 +241,9 @@ export interface ScenarioResult {
   limitations: string[];
 }
 
+// [impact class, rain class against local percentiles, 24 h rain in mm] for one tambon.
+export type TambonClasses = Record<string, [string, string | null, number | null]>;
+
 export const api = {
   overview: () => getJSON<Overview>("/api/overview"),
   status: () => getJSON<PipelineStatus>("/api/status"),
@@ -281,6 +286,13 @@ export const api = {
     if (province) q.set("province", province);
     return getJSON<ScenarioResult>(`/api/impact/scenario?${q.toString()}`, signal);
   },
+  tambons: () => getJSON<GeoJSONFeatureCollection>("/api/impact/tambons", undefined, "default"),
+  // The scenario rule runs on the server; the map only needs every tambon's resulting classes and the totals.
+  scenarioClasses: (rain24hMm: number, signal?: AbortSignal) =>
+    getJSON<ScenarioResult & { tambon_classes: TambonClasses }>(
+      `/api/impact/scenario?rain_24h_mm=${rain24hMm}&limit=1&classes=true`,
+      signal
+    ),
   liveForecast: () => getJSON<LiveForecast>("/api/impact/live-forecast"),
 };
 

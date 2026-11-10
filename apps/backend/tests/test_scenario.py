@@ -66,3 +66,14 @@ def test_invalid_input_is_rejected(query):
 def test_limit_and_limitations():
     body = client.get("/api/impact/scenario?rain_24h_mm=100&limit=1").json()
     assert len(body["tambons"]) == 1 and body["limitations"]
+
+
+def test_classes_for_every_tambon_are_returned_only_on_request():
+    assert "tambon_classes" not in client.get("/api/impact/scenario?rain_24h_mm=100&limit=1").json()
+    body = client.get("/api/impact/scenario?rain_24h_mm=100&limit=1&classes=true").json()
+    assert len(body["tambons"]) == 1 and len(body["tambon_classes"]) == body["summary"]["tambons"]
+    by_class = {}
+    for impact, rain_class, rain_mm in body["tambon_classes"].values():
+        by_class[impact] = by_class.get(impact, 0) + 1
+        assert rain_mm == 100.0 and rain_class in {"below_p75", "p75_p90", "p90_p95", "above_p95", None}
+    assert by_class == body["summary"]["tambons_by_impact_class"]
