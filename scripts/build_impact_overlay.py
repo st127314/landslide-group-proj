@@ -225,8 +225,8 @@ def main():
 
     out = out.reset_index()
     impact_rank = out["live_impact_class"].map({c: i for i, c in enumerate(IMPACT_ORDER)})
-    out = out.assign(_r=impact_rank).sort_values(["_r", "population_at_elevated_risk", "gfs_rain_24h_mm", "population_high_vh"],
-                                                 ascending=[True, False, False, False]).drop(columns="_r")
+    out = out.assign(_r=impact_rank).sort_values(["_r", "population_at_elevated_risk", "gfs_rain_24h_mm", "population_high_vh", "GID_3"],
+                                                 ascending=[True, False, False, False, True]).drop(columns="_r")
 
     # Province-level roll-up
     sum_cols = ["area_km2", "buildings_total", "buildings_high_vh", "population_total", "population_high_vh",

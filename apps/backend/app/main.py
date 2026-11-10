@@ -13,7 +13,7 @@ from .routers import impact, model, overview, status
 
 app = FastAPI(
     title="Landslide Impact API",
-    description="Read-only API over the landslide susceptibility / rainfall-trigger / impact pipeline outputs.",
+    description="Read-only API over the landslide susceptibility, rainfall forecast and impact pipeline outputs.",
     version="0.1.0",
 )
 

@@ -77,7 +77,7 @@ const OTHER_SOURCES: Array<{ name: string; use: string; detail: string }> = [
   {
     name: "OpenStreetMap (snapshot 2026-09-08)",
     use: "Exposure",
-    detail: "426,519 building footprints and 3,895 critical facilities clipped to the study area.",
+    detail: "426,519 building footprints and 3,895 public facilities (health, education, emergency, transport, worship) clipped to the study area.",
   },
   {
     name: "WorldPop 2020, constrained, UN-adjusted",

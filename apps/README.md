@@ -1,84 +1,62 @@
-# Landslide Impact app
+# Landslide Impact application
 
-Two apps, both read-only against the data pipeline's outputs
-(`data/`, `models/`, `results/` at the project root). Neither writes
-into that pipeline -- rerun the relevant script/notebook to refresh data,
-then restart the backend (it caches most pipeline outputs in memory on first
-use; the live forecast and impact overlay files are re-read on each request).
+Three parts, all read-only against the pipeline's outputs (`data/`, `models/`, `results/` at the project root):
 
-## Backend (`apps/backend`) -- FastAPI
+| Part | Folder | What it does |
+|---|---|---|
+| API | `apps/backend` | FastAPI. Serves the precomputed susceptibility map, exposure layers, live forecast, impact overlay and what-if scenario. It never runs the model: the map is scored offline by `scripts/predict_susceptibility_grid.py`. |
+| Dashboard | `apps/frontend` | Next.js, Tailwind and MapLibre. |
+| Forecast job | `apps/forecast` | One-shot container: `run_live_gfs_forecast.py` then `refresh_impact_overlay.py`. Run by cron on the server. |
+
+Deployment, Docker and CI/CD are in `apps/deploy/README.md`. Live: https://landslide.spadace.com
+
+## Backend
 
 ```bash
 cd apps/backend
-python3 -m venv .venv && PIP_USER=0 .venv/bin/pip install -r requirements.txt
-.venv/bin/uvicorn app.main:app --reload --port 8000
+python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+.venv/bin/uvicorn app.main:app --reload --port 8000      # interactive docs at http://localhost:8000/docs
+.venv/bin/pip install pytest httpx && .venv/bin/python -m pytest tests -q   # runs on a synthetic data tree
 ```
 
-Docs/try-it-out UI: http://localhost:8000/docs
+Static layers are read once and kept in memory as bytes (restart the API after new data); the live forecast and the
+impact overlay are re-read on every request. `LANDSLIDE_ROOT` points the API at another data folder (default: the
+project root).
 
 | Endpoint | What it serves |
 | --- | --- |
-| `GET /api/overview` | Summary stats (event/building/facility/population counts, best model) + pipeline status |
-| `GET /api/status` | Status of the pipeline pieces (factor grid, susceptibility map, live forecast, impact overlay) |
-| `GET /api/model` | Full `model_metadata.json` from the susceptibility-modeling notebook |
-| `GET /api/model/comparison` | Per-model CV + held-out test metrics, side by side |
-| `GET /api/impact/boundary` | Study-area boundary GeoJSON |
-| `GET /api/impact/susceptibility` | Point-level susceptibility scores for the training/test inventory (6,180 landslide + 6,180 non-landslide points) -- for model evaluation, not the map itself |
-| `GET /api/impact/susceptibility-grid?min_lon=&min_lat=&max_lon=&max_lat=&limit=` | The actual susceptibility **map**: ~1.14M points on a 250m grid, scored by the trained model (viewport-limited, same pattern as `/buildings`) |
-| `GET /api/impact/susceptibility-grid/metadata` | Class-bin counts, score interpretation, limitations for the grid above |
-| `GET /api/impact/facilities` | Critical-facility points (hospitals, schools, emergency services, transport hubs, places of worship) |
-| `GET /api/impact/buildings?min_lon=&min_lat=&max_lon=&max_lat=&limit=` | Building footprints for a bounding box (viewport-limited -- 426k+ total, never served unfiltered) |
-| `GET /api/impact/live-forecast` | NOAA GFS 24/48/72 h rainfall per tambon and its rain class (against local percentiles; fixed thresholds kept for reference) (from `scripts/run_live_gfs_forecast.py`) |
-| `GET /api/impact/scenario?rain_24h_mm=&province=&limit=` | What-if: replaces the 24 h rainfall in scope (all tambons or one province) and re-applies the impact rule to the stored overlay; in-memory, no Earth Engine, no extra model (see `apps/backend/app/scenario.py`) |
-| `GET /api/impact/overlay` | Live impact per tambon/province: terrain tier x GFS rain class x exposed buildings/facilities/population (from `scripts/build_impact_overlay.py`) |
-| `GET /api/impact/population` | WorldPop population stats for the study area (raster itself not tiled/served yet) |
+| `GET /api/health` | Liveness check used by Docker and the deploy smoke test |
+| `GET /api/overview`, `GET /api/status` | Summary counts and what each pipeline step last produced |
+| `GET /api/model`, `GET /api/model/comparison` | `model_metadata.json`; cross-validation and hold-out metrics of the eleven candidates |
+| `GET /api/impact/susceptibility-raster.png`, `.json` | The 250 m map as one coloured PNG, and its corner coordinates with a content hash (`version`) |
+| `GET /api/impact/susceptibility-at?lon=&lat=` | Calibrated score and class of the grid cell nearest a point (404 beyond ~400 m) |
+| `GET /api/impact/tambons` | The 1,055 tambon polygons (simplified), joined on the map by `GID_3` |
+| `GET /api/impact/overlay` | Per tambon and province: terrain tier, forecast rain and its class, live impact class, exposure |
+| `GET /api/impact/scenario?rain_24h_mm=&province=&limit=&classes=` | What-if: replaces the 24 h rain in scope and re-applies the impact rule; `classes=true` adds every tambon's classes for the map |
+| `GET /api/impact/live-forecast` | GFS 24 / 48 / 72 h rain per tambon and its classes |
+| `GET /api/impact/buildings.pmtiles` | Building footprints as vector tiles, read with HTTP range requests |
+| `GET /api/impact/boundary`, `/facilities`, `/susceptibility`, `/population` | Province outline, facility points, scored training/test points, WorldPop summary |
+| `GET /api/impact/buildings?bbox…`, `/susceptibility-grid?bbox…` | Bounding-box queries kept for analysis; the dashboard no longer uses them (the buildings one needs the 140 MB GeoJSON and about 1.4 GB of RAM) |
 
-## Frontend (`apps/frontend`) -- Next.js + Tailwind + MapLibre
+Inputs are validated by FastAPI (`rain_24h_mm` 0–1500, a known province, `limit` 1–200, coordinates in range: otherwise
+422); a missing data file gives 404 with the script to run; only GET is allowed.
+
+## Dashboard
 
 ```bash
 cd apps/frontend
 npm install
-npm run dev
+npm run dev        # http://localhost:3000; NEXT_PUBLIC_API_URL defaults to http://localhost:8000
+npm run lint && npm run build
 ```
-
-http://localhost:3000, configured via `.env.local` (`NEXT_PUBLIC_API_URL`, default `http://localhost:8000`).
 
 | Page | Contents |
 | --- | --- |
-| `/` Overview | Stat cards, live pipeline-job progress, links to the other pages |
-| `/impact` Live Impact | MapLibre map: study-area boundary, the 250m susceptibility map, critical facilities, buildings (all loaded per-viewport), plus the raw training/test sample points as a toggle |
-| `/warning` Early Warning | GFS 24/48/72 h forecast rainfall and live impact class per tambon, exposure at elevated risk, and the what-if rainfall scenario panel |
-| `/model` Model | Methodology write-up, best-model/threshold cards, full CV-vs-test model comparison table |
+| `/` Overview | What the tool does, headline counts, pipeline status |
+| `/impact` Live Impact | Full-screen map: tambon risk (live impact, terrain tier or rain class; GFS forecast or a what-if rainfall slider; search; click a tambon for its risk and exposure), the 250 m susceptibility map, facilities, buildings, training/test points |
+| `/warning` Early Warning | Forecast summary, live impact table and the what-if scenario panel |
+| `/model` Model | Method, selected model, comparison table, limitations |
+| `/data` Data | Inventory, the 20 factors and their sources, other datasets, limitations |
 
-## Data pipeline recap
-
-- **Susceptibility factor grid**: sampled as 250m points via Earth Engine
-  `reduceRegions` (`scripts/gee_sample_factor_grid_points.py`), not a raster
-  download -- an earlier raster-tile approach
-  (`gee_export_factor_grid_local.py`) was abandoned partway through because
-  it was ~10-60x slower and hit an undocumented Earth Engine 5,000-element
-  cap on large point counts (fixed in the point-sampling script by chunking).
-  See that script's docstring for why 250m is not a meaningful resolution
-  loss given the model's own 0.5° (~55 km) spatial-CV blocks.
-- **Susceptibility map**: `scripts/predict_susceptibility_grid.py` applies
-  the trained pipeline + isotonic calibrator to that grid, producing
-  `results/susceptibility_map/susceptibility_grid_points.csv` (served by the
-  API above) and a GeoTIFF (`susceptibility_grid.tif`) for GIS/zonal-stats use
-  outside this app.
-- **Exploratory rainfall model** (not used by the live pipeline): `notebooks/rainfall_trigger_threshold.ipynb`
-  fits IMERG antecedent rainfall on the landslide/paired-negative inventory. It has **no skill** (hold-out ROC-AUC 0.34):
-  the negatives share their landslide's date and region and the landslide dates are image dates. Kept as a documented
-  negative result; see `docs/METHODS.md`, Section 3 and Known issues.
-- **Live forecast + impact overlay**: `scripts/run_live_gfs_forecast.py` fetches NOAA GFS 24/48/72 h rainfall per tambon
-  (`results/live_forecast/latest.json`, served at `/api/impact/live-forecast`); `scripts/build_impact_overlay.py` joins it
-  with the susceptibility grid and OSM buildings / facilities / WorldPop population per tambon
-  (`results/impact_overlay/`, served at `/api/impact/overlay`, shown on the Early Warning page). Re-run both for a fresh
-  forecast. The impact class is a transparent triage rule (terrain factor x local rain class), not a validated forecast.
-- **Tambon aggregation**: boundaries are clipped from GADM (`scripts/clip_tambon_boundaries.py`)
-  into `data/boundary/southern_thailand_tambons.geojson` and used by the live forecast and the overlay.
-
-## What's not wired up yet
-
-- **Population raster on the map** -- only summary stats are served today;
-  showing the raster itself would need a tile server (e.g. titiler) in front
-  of `data/external/worldpop_2020_UNadj_constrained_aoi.tif`.
+The live impact class is a transparent rule (terrain tier × how unusual the forecast rain is for the tambon), not a
+validated landslide forecast; read `docs/METHODS.md`, Known issues, before using any number.

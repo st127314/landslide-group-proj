@@ -261,7 +261,7 @@ def susceptibility_map_metadata():
 
 def impact_overlay_data():
     """Not cached: rebuilt by scripts/build_impact_overlay.py after each
-    real-time trigger run, so every request should see the latest build."""
+    forecast run, so every request should see the latest build."""
     if not paths.IMPACT_OVERLAY_JSON.exists():
         return None
     return _read_json(paths.IMPACT_OVERLAY_JSON)

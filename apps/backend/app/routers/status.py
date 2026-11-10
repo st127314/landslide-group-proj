@@ -7,9 +7,6 @@ router = APIRouter(prefix="/api/status", tags=["status"])
 
 @router.get("")
 def status():
-    """Live progress of the background data-pipeline jobs (factor-grid tile
-    download, rainfall extraction) and which downstream pieces (susceptibility
-    raster, rainfall trigger model, combined impact overlay) are still
-    pending. Read directly from the running jobs' own logs/output directories
-    -- this API does not start or control them."""
+    """What each pipeline step last produced (factor grid, susceptibility map, live forecast, impact overlay), read
+    from the output files; this API does not start or control the jobs."""
     return status_module.pipeline_status()

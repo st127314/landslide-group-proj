@@ -123,7 +123,7 @@ export default function ScenarioPanel({ provinces }: { provinces: string[] }) {
               <div className="text-lg font-semibold tabular-nums">{s.buildings_at_elevated_risk.toLocaleString()}</div>
             </div>
             <div className="rounded-lg border border-line bg-surface-2 p-3">
-              <div className="eyebrow">Critical facilities</div>
+              <div className="eyebrow">Facilities</div>
               <div className="text-lg font-semibold tabular-nums">{s.facilities_at_elevated_risk.toLocaleString()}</div>
             </div>
             <div className="rounded-lg border border-line bg-surface-2 p-3">
@@ -176,7 +176,7 @@ export default function ScenarioPanel({ provinces }: { provinces: string[] }) {
           <p className="mt-2 text-xs text-muted">
             Top 15 tambons by impact class, then people at risk. Terrain × rain: no unusual rain means low everywhere;
             flat terrain never exceeds moderate; very high needs the steepest terrain and rain above that tambon&apos;s
-            P95. Classes saturate once rain passes a tambon&apos;s P95 (about 40–70 mm in the south), so 100 mm and 250 mm
+            P95. Classes saturate once rain passes a tambon&apos;s P95 (26–69 mm in the south, typically about 38 mm), so 100 mm and 250 mm
             give the same answer.
           </p>
           <div className="mt-3 note-warn">

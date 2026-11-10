@@ -58,8 +58,8 @@ def refresh(overlay, live):
 
     out = out.reset_index()
     rank = out["live_impact_class"].map({c: i for i, c in enumerate(IMPACT_ORDER)})
-    out = out.assign(_r=rank).sort_values(["_r", "population_at_elevated_risk", "gfs_rain_24h_mm", "population_high_vh"],
-                                          ascending=[True, False, False, False]).drop(columns="_r")
+    out = out.assign(_r=rank).sort_values(["_r", "population_at_elevated_risk", "gfs_rain_24h_mm", "population_high_vh", "GID_3"],
+                                          ascending=[True, False, False, False, True]).drop(columns="_r")
 
     sums = [c for c in PROVINCE_SUMS if c in out.columns]
     prov = out.groupby("NAME_1")[sums].sum()

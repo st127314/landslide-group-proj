@@ -11,6 +11,7 @@ from pathlib import Path
 
 PROJECT_DIR = Path(__file__).resolve().parent.parent
 ROOTS = ["data", "models", "results"]
+SKIP = ("data/cache/", "data/raw/")   # resumable extraction parts and source downloads: not what the documents describe
 
 
 def sha256(path):
@@ -30,7 +31,7 @@ def main():
     rows = []
     for root in ROOTS:
         for path in sorted((PROJECT_DIR / root).rglob("*")):
-            if path.is_file() and path.name != ".DS_Store":
+            if path.is_file() and path.name != ".DS_Store" and not path.relative_to(PROJECT_DIR).as_posix().startswith(SKIP):
                 rows.append({
                     "path": path.relative_to(PROJECT_DIR).as_posix(),
                     "size_bytes": path.stat().st_size,

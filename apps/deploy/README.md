@@ -2,8 +2,9 @@
 
 ```
 git push (main) ─► GitHub Actions
-                    1. test      backend API tests (synthetic data) + frontend lint/build + pipeline unit tests
-                    2. build     Docker images  ghcr.io/<owner>/landslide-backend|frontend:<sha>
+                    1. test      backend API tests (synthetic data) + data/model tests + frontend lint/build
+                                 + deploy-config checks (shell syntax, docker compose config)
+                    2. build     Docker images  ghcr.io/<owner>/landslide-backend|frontend|forecast:<sha>
                     3. deploy    SSH to the AWS server -> docker compose pull/up -> health check -> auto-rollback
                                  (skipped until the repository variable DEPLOY_ENABLED = true)
 ```
@@ -36,19 +37,36 @@ Ubuntu 26.04, 2 vCPU, **908 MB RAM, 1 GB swap (added by `bootstrap-server.sh --w
 the compose plugin; the host nginx also serves another app on `127.0.0.1:8050`. This stack only adds one nginx file and
 three containers.
 
-**Memory decides what is deployed.** The API reads its data lazily, so the *light* deployment (live forecast, impact
-overlay, what-if scenario, susceptibility grid) needs about 150 MB of backend RAM (limit 450 MB). The 426 k building
-footprints (140 MB GeoJSON) need roughly 1.5 GB as Python objects and are **not uploaded** by default (`LIGHT=1`); the
-building-level endpoints answer 404 until they are (needs an instance with >= 4 GB). The container limits keep an
-out-of-memory kill inside the container instead of taking the other app down.
+**Memory decides what is deployed.** The API reads its data lazily, so the deployment (live forecast, impact overlay,
+what-if scenario, susceptibility map, tambons, facilities) needs about 150 MB of backend RAM. Buildings are served as
+vector tiles from `buildings.pmtiles` (20 MB on disk, nothing in memory); the 140 MB GeoJSON, which needs roughly
+1.5 GB as Python objects, is not uploaded (`SKIP_BUILDINGS=1`), so only the bounding-box endpoint
+`/api/impact/buildings` answers 404. Set `BACKEND_MEM_LIMIT=450m` and `FRONTEND_MEM_LIMIT=220m` in
+`/opt/landslide/.env.local` on a small server (the compose defaults are 3g and 300m; `deploy-from-laptop.sh` writes
+these two lines): the limits keep an out-of-memory kill inside the container instead of taking the other app down.
+
+## Scheduled forecast refresh
+
+`apps/forecast/Dockerfile` builds a third image that runs `run_live_gfs_forecast.py` and then
+`refresh_impact_overlay.py` (pandas only, a few seconds, 300 MB limit). It is the compose service `forecast`, in the
+profile `jobs`, so `docker compose up` never starts it. Run **once from your laptop**:
+
+```bash
+apps/deploy/install-forecast-cron.sh credentials/github_deploy_key ubuntu@<server-ip>
+```
+
+It copies the Earth Engine service-account key to `/opt/landslide/secrets/gee_key.json` (mode 600, mounted read-only
+into the job) and installs the cron entry `20 */3 * * * docker compose --profile jobs run --rm forecast`. The API
+re-reads the forecast and overlay on every request, so no restart is needed. Log: `/opt/landslide/forecast.log`.
 
 ## Files
 
 ```
 docker-compose.yml  deploy.sh  enable-https.sh  install-nginx-site.sh   <- uploaded by the workflow on every deploy
+install-forecast-cron.sh         run LOCALLY once: uploads the Earth Engine key and installs the 3-hourly forecast job
 traefik/landslide.yml            routes/middlewares (rendered to traefik/dynamic/landslide.yml)
 nginx/landslide-host.conf.template   host-nginx site block (rendered to /etc/nginx/conf.d/landslide.conf)
-bootstrap-server.sh              one-time: compose plugin + folders (optional 2 GB swap); never touches nginx
+bootstrap-server.sh              one-time: compose plugin + folders (optional 1 GB swap); never touches nginx
 sync-data.sh                     run LOCALLY: uploads the private data the API reads
 ```
 On the server (`/opt/landslide`): `project/{data,models,results}` (private data, mounted read-only), `.env.local`
@@ -61,7 +79,7 @@ On the server (`/opt/landslide`): `project/{data,models,results}` (private data,
 1. **Size** — see the memory note above.
 2. **Prepare the server** (adds the compose plugin and folders only; read the script first):
    `ssh -i ml.pem ubuntu@<server-ip> 'bash -s' < apps/deploy/bootstrap-server.sh`
-3. **Upload the private data** (~250 MB): `apps/deploy/sync-data.sh ml.pem ubuntu@<server-ip>`
+3. **Upload the private data** (about 130 MB): `SKIP_BUILDINGS=1 apps/deploy/sync-data.sh ml.pem ubuntu@<server-ip>`
    (re-run, then `docker compose restart backend`, whenever the results change).
 4. **GitHub secrets/variables** — must be set by an account with admin rights on the repo (`st127314`; the `gh` CLI on
    this machine is logged in as a different user and cannot):
@@ -91,6 +109,8 @@ On the server (`/opt/landslide`): `project/{data,models,results}` (private data,
 | Status / logs | `docker compose ps` · `docker compose logs -f backend` |
 | Roll back by hand | `IMAGE_TAG=<older-sha> GHCR_OWNER=st127314 ./deploy.sh` |
 | Restart after new data | `docker compose restart backend` |
+| Refresh the forecast now | `docker compose --profile jobs run --rm forecast` |
+| Free disk | `deploy.sh` keeps only the current and previous image tags; `docker image prune -f` removes dangling layers |
 
 A failed health check after a deploy rolls back to the previous tag automatically (`deploy.sh`).
 

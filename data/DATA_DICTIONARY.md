@@ -1,6 +1,6 @@
 # Data dictionary
 
-All coordinates are WGS 84 (EPSG:4326) unless stated. Missing values are blank. Row counts and checksums: `../FILE_MANIFEST.csv`. How each factor was derived: `../docs/METHODS.md` §2 and `../docs/DATA_SOURCES.md`.
+All coordinates are WGS 84 (EPSG:4326) unless stated. Missing values are blank. Row counts and checksums: `../FILE_MANIFEST.csv`. How each factor was derived: `../docs/METHODS.md` §2.
 
 ## data/inventory/
 
@@ -41,11 +41,11 @@ All coordinates are WGS 84 (EPSG:4326) unless stated. Missing values are blank. 
 | `ls_factor` | – | Slope length–steepness factor |
 | `upstream_area_km2` | km² | Contributing area (HydroSHEDS < 2020, MERIT ≥ 2020) |
 | `twi`, `spi` | – | Topographic wetness / stream power index |
-| `soil_texture` | USDA texture-class code (1–9 occur) | OpenLandMap texture class |
+| `soil_texture` | USDA texture-class code (1, 3, 4, 6, 7 and 9 occur) | OpenLandMap texture class |
 | `soil_clay_pct`, `soil_sand_pct` | % | OpenLandMap |
 | `soil_bulk_density` | OpenLandMap raw units | See the OpenLandMap asset description |
 | `dist_to_road`, `dist_to_river` | m | Nearest OSM road / river-or-waterway (≤ 20 km search) |
-| `lithology` | text | GLiM level-1 class (6 occur) |
+| `lithology` | text | GLiM level-1 class (6 occur, plus "No data" for 2 rows) |
 | `ndvi` | −1…1 | Latest valid NDVI in the 90 days before the event day |
 | `lulc` | text | Land-cover class (SERVIR, Dynamic World fallback) |
 
@@ -69,15 +69,18 @@ All coordinates are WGS 84 (EPSG:4326) unless stated. Missing values are blank. 
 ## data/boundary/
 - `southern_thailand.geojson` — 14 province polygons (study area).
 - `southern_thailand_web.geojson` — the same provinces simplified to ~100 m with `NAME_1` only, served to the web map (`scripts/make_web_layers.py`).
+- `southern_thailand_tambons_web.geojson` — the 1,055 tambons simplified to ~100 m as one coverage, with `GID_3` and names only; the web map joins the risk figures to it by `GID_3` (`scripts/make_web_layers.py`).
 - `southern_thailand_tambons.geojson` — 1,055 tambons: `GID_3`, `NAME_3`, `NAME_2` (district), `NAME_1` (province), `area_km2`, `sample_lon`, `sample_lat`.
 - `southern_thailand_tambon_points.csv` — one representative point per tambon (same fields) used for rainfall sampling.
 
 ## data/external/
-GeoJSON layers clipped to the study area. (The roads / rivers / waterways / faults / lithology source layers, each as `*_aoi` and `*_buffer20km`, were only inputs for uploading Earth Engine assets; they are archived and can be re-created with `scripts/download_external_data.py`; `manifest.json` still describes them.) Shipped layers:
+GeoJSON layers clipped to the study area. (The roads / rivers / waterways / faults / lithology source layers, each as `*_aoi` and `*_buffer20km`, were only inputs for uploading Earth Engine assets; they are not kept and can be re-created with `scripts/download_external_data.py`; `manifest.json` still describes them.) Shipped layers:
 | File | Content | Key fields |
 |---|---|---|
 | `buildings_aoi.geojson` | 426,519 OSM building footprints | `osm_id`, `fclass`, `type`, `name` |
 | `facilities_aoi.geojson` | 3,895 OSM points (health, schools, emergency, transport, worship…) | `osm_id`, `fclass`, `name` |
+| `buildings.pmtiles` | The same footprints as vector tiles (zoom 12–15), read by the web map with range requests (`scripts/make_buildings_tiles.sh`) | layer `buildings`: `type`, `name` |
+| `facilities_web.geojson` | Facilities with type and name only, for the web map (`scripts/make_web_layers.py`) | `fclass`, `name` |
 | `worldpop_2020_UNadj_constrained_aoi.tif` | Population per ~100 m pixel, 2020; total 9,385,883 | band 1, no-data −99999 |
 | `rain_percentiles_24h_tambon.csv`, `rain_percentiles_24h_meta.json` | Per-tambon wet-day 24 h rainfall percentiles from CHIRPS 1991–2020 averaged onto the 0.25° GFS grid (wet day ≥ 1 mm); 1,055 rows | `GID_3`, `NAME_*`, `wet_p75_mm`, `wet_p90_mm`, `wet_p95_mm`, `wet_p99_mm`, `wet_day_fraction` |
 | `manifest.json`, `validation.json`, `worldpop_manifest.json` | Counts, extents, checks, sources | |
@@ -100,7 +103,8 @@ Resumable Earth Engine extraction parts, kept so a rerun skips finished work.
 - `rainfall_trigger/` — rainfall-trigger pipeline (`random_forest`), calibrator and metadata (13 features, metrics, limitations). **Its hold-out ROC-AUC is 0.34, below chance: the model has no skill and is not used by the live pipeline** (paired same-date negatives, image-date landslide dates; see `../docs/METHODS.md`).
 
 ## results/
-- `susceptibility_map/susceptibility_grid_points.csv` — `px_lon`, `px_lat`, `raw_probability`, `calibrated_probability` (0.00–1.00), `susceptibility_class` (`very_low` < 0.2 ≤ `low` < 0.4 ≤ `moderate` < 0.6 ≤ `high` < 0.8 ≤ `very_high`), `above_threshold` (1 if raw score ≥ 0.302; 27.2% of cells). `susceptibility_grid.tif` is the same calibrated score rasterised to 1,968 × 2,396 cells (float32, EPSG:4326, no-data NaN); `susceptibility_map_metadata.json` has class counts and limitations.
+- `susceptibility_map/susceptibility_grid_points.csv` — `px_lon`, `px_lat`, `raw_probability`, `calibrated_probability` (0.00–1.00), `susceptibility_class` (`very_low` ≤ 0.2 < `low` ≤ 0.4 < `moderate` ≤ 0.6 < `high` ≤ 0.8 < `very_high`), `above_threshold` (1 if raw score ≥ 0.302; 27.2% of cells). `susceptibility_grid.tif` is the same calibrated score rasterised to 1,968 × 2,396 cells (float32, EPSG:4326, no-data NaN); `susceptibility_map_metadata.json` has class counts and limitations.
+- `susceptibility_map/susceptibility_web.png`, `susceptibility_web.json` — the map as one coloured, transparent PNG in Web Mercator with its corner coordinates (`scripts/make_susceptibility_png.py`); what the web map draws.
 - `live_forecast/latest.json` — GFS run metadata (`gfs_run_utc`, `generated_utc`, `window_start_utc`, `window_24h_end_utc`, `window_72h_end_utc`, `forecast_hours_used`), the assumed `rain_classes_mm_24h`, a `summary`, `method`, `limitations` and, per tambon: `gfs_rain_24h_mm`, `gfs_rain_48h_mm`, `gfs_rain_72h_mm` (forecast totals counted from now), `gfs_peak_hourly_mm_24h`, `rain_class_24h` (absolute: `light` < 10 mm, `moderate` 10–35, `heavy` 35–90, `very_heavy` ≥ 90), `local_p75_mm`, `local_p90_mm`, `local_p95_mm` (the tambon's wet-day percentiles) and `rain_local_class_24h` (`below_p75`, `p75_p90`, `p90_p95`, `above_p95`; this one drives the live impact).
 - `impact_overlay/impact_overlay_by_tambon.csv` (1,055 rows):
   | Column group | Meaning |
@@ -116,3 +120,5 @@ Resumable Earth Engine extraction parts, kept so a rerun skips finished work.
 - `impact_overlay/facility_exposure.csv` — one row per facility with `category`, its tambon, susceptibility class/score and tambon classes.
 - `impact_overlay/impact_overlay.json` — the above plus metadata and limitations (served by `/api/impact/overlay`).
 - `figures/` — four PNGs (susceptibility map, combined-class maps, model comparison, exposed population by province).
+- `experiments/results.json`, `errors.json` — experiments E1–E7, error analysis, calibration and the first decision-value calculation (`notebooks/experiments/run_experiments.py`). `experiments/followup.json` — follow-ups F1–F3: near-duplicate thinning, models without NDVI and hydrology with the like-for-like decision value (`cell_top20`, `cell_top10`), and environment-matched negatives (`run_followup_experiments.py`). `experiments/province.csv` — province of each point, used for E5.
+- `data/processed/legacy_random_negatives_factors_cleaned.csv` — the earlier dataset with randomly placed negatives, kept only as the comparison input of experiment E4.

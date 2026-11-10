@@ -22,7 +22,7 @@ const COMPONENTS = [
     icon: Users,
     step: "Who is affected",
     title: "Exposure",
-    text: "Population (WorldPop), buildings and critical facilities (OpenStreetMap) are matched to the susceptibility map and the forecast to count what is at elevated risk.",
+    text: "Population (WorldPop), buildings and public facilities (OpenStreetMap) are matched to the susceptibility map and the forecast to count what is at elevated risk.",
   },
 ];
 
@@ -47,7 +47,7 @@ export default async function OverviewPage() {
         <>
           A decision-support tool for Thailand&apos;s 14 southern provinces. It shows which terrain is most prone to
           landslides, where the rain forecast for the next 24&ndash;72 hours is unusually heavy for the area, and how
-          many people, buildings and critical facilities lie in the most susceptible places.
+          many people, buildings and public facilities lie in the most susceptible places.
         </>
       }
     >
@@ -86,7 +86,7 @@ export default async function OverviewPage() {
               sub="Paired pseudo-absence points"
             />
             <StatCard label="Buildings mapped" icon={Building2} value={fmt(overview.buildings_mapped)} sub="OSM footprints" />
-            <StatCard label="Critical facilities" icon={Hospital} value={fmt(overview.facilities_mapped)} sub="Hospitals, schools, emergency, transport, worship" />
+            <StatCard label="Facilities" icon={Hospital} value={fmt(overview.facilities_mapped)} sub="Hospitals, schools, emergency, transport, worship" />
             <StatCard
               label="Population (study area)" icon={Users}
               value={fmt(overview.population_estimate)}
@@ -103,7 +103,7 @@ export default async function OverviewPage() {
             <div className="card">
               <h2 className="card-title">Pipeline status</h2>
               <p className="card-desc">
-                Live progress of the background data jobs and which downstream pieces are still pending.
+                What each step of the data pipeline last produced, read from its output files.
               </p>
               <PipelineStatusList status={overview.pipeline_status} />
             </div>
@@ -116,7 +116,7 @@ export default async function OverviewPage() {
                     Live Impact map <ArrowRight className="h-3.5 w-3.5" aria-hidden />
                   </Link>
                   <p className="text-muted">
-                    The 250 m susceptibility map, buildings and critical facilities on a map; the
+                    The 250 m susceptibility map, buildings and facilities on a map; the
                     Early Warning page adds forecast rainfall and live impact per tambon.
                   </p>
                 </li>

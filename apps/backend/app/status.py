@@ -1,7 +1,5 @@
-"""Reads progress straight out of the running pipeline scripts' own log
-files/output directories -- this process does not run or control those
-scripts, only reports on them, so this stays honest even if a job has
-stalled or died since the last request."""
+"""Reports what each pipeline step last produced, read from the output files themselves: this process does not
+run or control the pipeline scripts, so the status stays honest even if a job has stalled since the last request."""
 
 import json
 
@@ -37,7 +35,8 @@ def susceptibility_map_status():
         return {"label": "Full susceptibility map (250 m grid)", "done": True,
                 "complete": n, "total": n,
                 "note": "Point-sampled at 250 m (see scripts/gee_sample_factor_grid_points.py) "
-                        "and scored by the trained model; served via /api/impact/susceptibility-grid."}
+                        "and scored by the trained model; served as one PNG (/api/impact/susceptibility-raster.png) "
+                        "with point lookups at /api/impact/susceptibility-at."}
     return {
         "label": "Full susceptibility map (250 m grid)",
         "done": False,
@@ -53,8 +52,8 @@ def live_forecast_status():
         return {"label": label, "done": True,
                 "note": f"GFS run {str(meta.get('gfs_run_utc', ''))[:16]} UTC, fetched "
                         f"{str(meta.get('generated_utc', ''))[:16]} UTC (scripts/run_live_gfs_forecast.py); "
-                        f"max 24 h forecast {summary.get('max_24h_mm')} mm. Rainfall classes are assumed thresholds, "
-                        "not calibrated on landslides."}
+                        f"max 24 h forecast {summary.get('max_24h_mm')} mm. Rain is classed against each tambon's own "
+                        "wet-day percentiles, which are not calibrated on landslides."}
     return {"label": label, "done": False,
             "note": "Run scripts/run_live_gfs_forecast.py (needs Earth Engine) then scripts/build_impact_overlay.py."}
 
@@ -64,9 +63,9 @@ def impact_overlay_status():
     if paths.IMPACT_OVERLAY_JSON.exists():
         meta = json.loads(paths.IMPACT_OVERLAY_JSON.read_text()).get("metadata", {})
         return {"label": label, "done": True,
-                "note": f"Built {meta.get('generated_utc', '')[:19]} UTC from the trigger run at "
-                        f"{(meta.get('trigger_generated_utc') or '')[:19]} UTC "
-                        "(scripts/build_impact_overlay.py); served via /api/impact/overlay."}
+                "note": f"Updated {meta.get('generated_utc', '')[:16]} UTC for GFS run "
+                        f"{(meta.get('gfs_run_utc') or '')[:16]} UTC (scripts/build_impact_overlay.py, refreshed by "
+                        "scripts/refresh_impact_overlay.py); served via /api/impact/overlay."}
     return {"label": label, "done": False,
             "note": "Run scripts/build_impact_overlay.py (needs the susceptibility map and a live forecast run)."}
 

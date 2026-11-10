@@ -56,8 +56,8 @@ delete the relevant cache files to refresh them after source revisions. Rows are
 written progressively to `.csv.part`; the final CSV replaces the previous output
 only after all events finish. Source errors stop the run and preserve the cache.
 
-Use `Event_ID` (plus location/date if IDs are not unique) to join the rainfall CSV
-to the conditioning-factor CSV. `event_row` preserves the input feature position.
+Use `inventory_id` for landslides (`Event_ID` is empty in that file) and `Event_ID` for the paired negatives to join
+the rainfall CSVs to the conditioning-factor CSV. `event_row` preserves the input feature position.
 
 Checks:
 

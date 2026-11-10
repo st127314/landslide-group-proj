@@ -253,7 +253,7 @@ re-extract both classes together; the paired workflow above exists so the landsl
 ## Alternative negative sampling (not used)
 
 A nearest-event design (uniformly random points, each given the date of the *nearest* landslide) and its
-rainfall-verification script are archived outside the submission tree. That design produced negatives with a very
+rainfall-verification script are no longer part of the project. That design produced negatives with a very
 different year/province mix, 17.5% of which lay within 2 km of an undated landslide record, so the paired design above
 is used instead. See `docs/METHODS.md`.
 
@@ -263,8 +263,28 @@ is used instead. See `docs/METHODS.md`.
 python scripts/compute_rain_percentiles.py    # Earth Engine, ~1 min, one-off: per-tambon wet-day rainfall percentiles (CHIRPS 1991-2020) -> data/external/rain_percentiles_24h_tambon.csv
 python scripts/run_live_gfs_forecast.py       # Earth Engine, ~10 s: GFS 24/48/72 h rainfall per tambon -> results/live_forecast/latest.json
 python3 scripts/build_impact_overlay.py       # local: joins forecast + susceptibility + exposure -> results/impact_overlay/
+python3 scripts/refresh_impact_overlay.py     # instead of the full build when only the forecast changed (seconds, pandas only)
 python3 scripts/make_figures.py               # local: report figures -> results/figures/
 ```
+
+`refresh_impact_overlay.py` re-applies the impact rule to the stored overlay with the new forecast and gives the same
+`impact_overlay.json` as the full build (it does not rewrite the CSV files). The server runs the forecast and the refresh
+together as a scheduled container job (`apps/forecast/Dockerfile`, `apps/deploy/install-forecast-cron.sh`).
+
+# Susceptibility map and web layers
+
+```bash
+python scripts/gee_sample_factor_grid_points.py   # Earth Engine: 250 m factor grid -> data/processed/factor_grid_points/
+python scripts/predict_susceptibility_grid.py     # scores the grid -> results/susceptibility_map/ (CSV, GeoTIFF, metadata)
+python3 scripts/make_susceptibility_png.py        # the coloured PNG the web map draws (needs GDAL)
+python3 scripts/make_web_layers.py                # slim province, tambon and facility layers for the web map (needs geopandas)
+scripts/make_buildings_tiles.sh                   # building footprints as PMTiles (needs tippecanoe)
+python3 scripts/make_manifest.py                  # FILE_MANIFEST.csv: size, rows and SHA-256 of data/, models/, results/
+```
+
+`download_external_data.py`, `download_worldpop_population.py` and `clip_tambon_boundaries.py` prepare the exposure and
+boundary layers these steps read; `gee_export_factor_grid_local.py` is only imported by the grid sampler for its tiling
+and factor stack (its own raster export was abandoned as too slow).
 
 `run_live_gfs_forecast.py` uses `NOAA/GFS0P25` (hourly forecast images, `precipitation_rate` x 3600 s per hour). It sums the hours
 from the first forecast hour still in the future for 24, 48 and 72 h, samples the 0.25 deg cell containing each tambon's

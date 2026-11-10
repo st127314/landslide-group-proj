@@ -108,7 +108,7 @@ export default async function WarningPage() {
           <p className="mt-1 text-sm text-muted">
             Right now {totals.population_at_elevated_risk.toLocaleString()} people,{" "}
             {totals.buildings_at_elevated_risk.toLocaleString()} buildings and {totals.facilities_at_elevated_risk}{" "}
-            critical facilities are in high-susceptibility terrain inside tambons rated <em>high</em> or{" "}
+            facilities are in high-susceptibility terrain inside tambons rated <em>high</em> or{" "}
             <em>very high</em>. Overall, {totals.population_high_vh.toLocaleString()} of{" "}
             {totals.population_total.toLocaleString()} people live in high or very-high susceptibility cells regardless
             of the weather.

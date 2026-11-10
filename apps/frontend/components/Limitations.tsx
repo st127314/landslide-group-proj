@@ -6,7 +6,7 @@ const GROUPS = {
     title: "Data",
     items: [
       "Landslide dates are the dates of the satellite images used to map the scars, not the day each landslide happened: the 6,180 points fall on only 164 dates.",
-      "Dated landslide records exist in only 6 of the 14 provinces, so the map for Phuket, Yala, Songkhla, Narathiwat, Pattani, Satun, Nakhon Si Thammarat and Ranong is extrapolated.",
+      "All but 4 of the 6,180 dated landslide records lie in 6 of the 14 provinces, so the map for Phuket, Yala, Songkhla, Narathiwat, Pattani, Satun, Nakhon Si Thammarat and Ranong is extrapolated.",
       "Distance to stream was dropped (wrong units in the pre-2020 source); distance to fault and drainage density were too incomplete to use.",
       "Exposure is a snapshot: WorldPop 2020 population and OpenStreetMap buildings and facilities from 2026-09-08, whose completeness varies.",
     ],
@@ -17,7 +17,9 @@ const GROUPS = {
       "Scores are relative. The model was trained on equal numbers of landslide and non-landslide points, so a score ranks terrain; it is not a real-world probability.",
       "The task is easier than it looks: non-landslide points are mostly lowland (median slope 7° against 29° for landslides), so the high ROC-AUC partly reflects that contrast.",
       "Spatial cross-validation with a 5 km embargo is stricter than random splits but cannot remove the issues above.",
-      "The map is scored on a 250 m grid, coarser than the 30 m terrain data the model was trained on.",
+      "The model separates hillslopes from lowland; it does not rank comparable slopes. Against negatives matched on slope and elevation its ROC-AUC is about 0.5.",
+      "On the map, 61% of held-out landslides fall in the highest-scoring 20% of 250 m cells: three times chance, below the 70% the project aimed for.",
+      "NDVI and the hydrology factors come from different sources on the map than in training, and add nothing there; a retrained model should drop them.",
     ],
   },
   forecast: {
