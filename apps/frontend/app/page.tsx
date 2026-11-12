@@ -16,7 +16,7 @@ const COMPONENTS = [
     icon: CloudRain,
     step: "When",
     title: "Rainfall forecast",
-    text: "The NOAA GFS forecast for the next 24–72 hours is compared with each sub-district's own 30-year rainfall record to flag rain that is unusually heavy for that place.",
+    text: "The NOAA GFS forecast for the next 24 hours, with totals to 5 days, is compared with each sub-district's own 30-year rainfall record to flag rain that is unusually heavy for that place.",
   },
   {
     icon: Users,
@@ -46,7 +46,7 @@ export default async function OverviewPage() {
       description={
         <>
           A decision-support tool for Thailand&apos;s 14 southern provinces. It shows which terrain is most prone to
-          landslides, where the rain forecast for the next 24&ndash;72 hours is unusually heavy for the area, and how
+          landslides, where the rain forecast for the next 24 hours to 5 days is unusually heavy for the area, and how
           many people, buildings and public facilities lie in the most susceptible places.
         </>
       }

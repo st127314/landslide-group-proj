@@ -6,7 +6,8 @@ import type { Map as MapLibreMap } from "maplibre-gl";
 import type { FeatureCollection } from "geojson";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { Protocol } from "pmtiles";
-import { ChevronDown, Layers as LayersIcon, List, MapPin, MapPinned, Search, TriangleAlert, X } from "lucide-react";
+import { ChartNoAxesColumn, ChevronDown, Layers as LayersIcon, List, MapPin, MapPinned, Search, TriangleAlert, X } from "lucide-react";
+import ImpactCharts, { RainOutlook } from "@/components/ImpactCharts";
 import { ageLabel, isStale } from "@/lib/time";
 import { api, type ImpactOverlay, type OverlayTambon, type ScenarioResult, type TambonClasses } from "@/lib/api";
 
@@ -80,7 +81,8 @@ const TAMBON_MODES: Record<ColourBy, { label: string; legend: string; state: str
     legend: "Live impact (terrain × rain)",
     state: "impact",
     classes: [
-      { key: "very_high", label: "Very high", color: "#dc2626" },
+      // #b91c1c, not the brighter #dc2626: it stays clearly apart from the orange for every kind of colour vision.
+      { key: "very_high", label: "Very high", color: "#b91c1c" },
       { key: "high", label: "High", color: "#f97316" },
       { key: "moderate", label: "Moderate", color: "#facc15" },
       { key: "low", label: "Low", note: "not shaded", color: "transparent" },
@@ -224,6 +226,10 @@ export default function ImpactMap() {
   );
   const [riskOpen, setRiskOpen] = useState(wide);
   const [legendOpen, setLegendOpen] = useState(wide);
+  // The charts sit between the left column and the legend, so they open by default only where that gap is wide.
+  const [chartsOpen, setChartsOpen] = useState(
+    () => typeof window !== "undefined" && window.innerWidth >= 1280 && window.innerHeight >= 860
+  );
   const [zoom, setZoom] = useState(STUDY_AREA_ZOOM);
   const [rasterAvailable, setRasterAvailable] = useState(true);
   const [selected, setSelected] = useState<Selection | null>(null);
@@ -544,6 +550,14 @@ export default function ImpactMap() {
     if (map?.getLayer("tambons-fill")) map.setPaintProperty("tambons-fill", "fill-color", tambonFill(colourBy));
   }, [colourBy, tambonsReady]);
 
+  // While the charts are open on a wide screen, treat the strip they cover as padding so the study area stays in view.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !tambonsReady) return;
+    const covered = chartsOpen && window.innerWidth >= 1024 ? Math.min(280, Math.round(window.innerHeight * 0.3)) : 0;
+    map.easeTo({ padding: { top: 0, right: 0, bottom: covered, left: 0 }, duration: 300 });
+  }, [chartsOpen, tambonsReady]);
+
   const selectedGid = selected?.kind === "tambon" ? selected.gid : null;
   useEffect(() => {
     const map = mapRef.current;
@@ -565,6 +579,7 @@ export default function ImpactMap() {
   };
 
   const details = selected && describe(selected, tambonById, classes, scenarioActive ? whatIfMm : null);
+  const selectedTambon = selectedGid ? tambonById.get(selectedGid) : undefined;
   const mode = TAMBON_MODES[colourBy];
   const legendEmpty =
     !(layers.tambons && tambonsReady) && !layers.susceptibilityGrid && !layers.susceptibility && !layers.facilities && !layers.buildings;
@@ -573,7 +588,7 @@ export default function ImpactMap() {
     <div className="relative h-full w-full">
       <div ref={containerRef} className="h-full w-full" />
 
-      <div className="pointer-events-none absolute bottom-10 left-3 top-3 flex w-[min(17rem,calc(100%-1.5rem))] flex-col gap-3">
+      <div className="pointer-events-none absolute bottom-24 left-3 top-3 flex w-[min(17rem,calc(100%-1.5rem))] flex-col gap-3 lg:bottom-10">
         {/* Tambon risk controls */}
         {layers.tambons && tambonsReady && overlay && (
           <div className="map-panel pointer-events-auto flex min-h-11 flex-col overflow-hidden">
@@ -782,6 +797,42 @@ export default function ImpactMap() {
         </div>
       )}
 
+      {/* Charts: bottom centre on a wide screen (between the left column and the legend); a bottom sheet on a narrow one. */}
+      {layers.tambons && tambonsReady && overlay && (
+        <div
+          className={`map-panel absolute bottom-8 left-3 flex max-h-[55%] flex-col lg:left-[18.5rem] lg:right-[16.5rem] lg:max-h-[46%] ${
+            chartsOpen ? "right-3 z-10" : "lg:w-fit lg:right-auto"
+          }`}
+        >
+          <button
+            type="button"
+            onClick={() => setChartsOpen((o) => !o)}
+            className="flex w-full shrink-0 items-center justify-between gap-6 px-4 py-2.5"
+            aria-expanded={chartsOpen}
+          >
+            <span className="flex items-center gap-2 font-semibold">
+              <ChartNoAxesColumn className="h-4 w-4 text-accent" aria-hidden />
+              Charts
+              <span className="hidden text-xs font-normal text-muted sm:inline">
+                {scenarioActive ? `what-if ${whatIfMm} mm` : "GFS forecast"}
+              </span>
+            </span>
+            <Chevron open={chartsOpen} />
+          </button>
+          {chartsOpen && (
+            <div className="overflow-y-auto border-t border-line px-4 py-3">
+              <ImpactCharts
+                tambons={overlay.tambons}
+                classes={classes}
+                scenarioMm={scenarioActive ? whatIfMm : null}
+                impactColors={TAMBON_MODES.impact.classes}
+                rainColors={TAMBON_MODES.rain.classes}
+              />
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Details of the clicked tambon, cell or feature */}
       {details && (
         <div className="map-panel absolute right-14 top-3 flex max-h-[calc(55%-2.5rem)] w-[min(19rem,calc(100%-5rem))] flex-col">
@@ -814,6 +865,7 @@ export default function ImpactMap() {
                 ))}
               </dl>
             ))}
+            {selectedTambon && !scenarioActive && <RainOutlook tambon={selectedTambon} rainColors={TAMBON_MODES.rain.classes} />}
             {details.note && <p className="mt-2 border-t border-line pt-2 leading-snug text-subtle">{details.note}</p>}
           </div>
         </div>

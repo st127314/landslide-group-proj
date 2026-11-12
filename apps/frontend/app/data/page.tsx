@@ -67,7 +67,7 @@ const OTHER_SOURCES: Array<{ name: string; use: string; detail: string }> = [
   {
     name: "NOAA GFS 0.25° (Earth Engine NOAA/GFS0P25)",
     use: "Forecast rainfall",
-    detail: "Hourly forecast steps summed over the next 24, 48 and 72 h per tambon; cells are about 28 km wide.",
+    detail: "Forecast steps summed over the next 24, 48, 72, 96 and 120 h per tambon (hourly to +120 h of the run, 3-hourly after); cells are about 28 km wide.",
   },
   {
     name: "CHIRPS daily rainfall, 1991–2020",
