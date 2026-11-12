@@ -1,0 +1,17 @@
+{
+ "candidate": "v2",
+ "production_before": "v1",
+ "candidate_eligibility": {
+  "blocked_features": [],
+  "folds_meeting_target": 4
+ },
+ "production_eligibility": {
+  "blocked_features": [
+   "ndvi"
+  ],
+  "folds_meeting_target": null
+ },
+ "decision": "promoted",
+ "reason": "production model v1 is not eligible (['ndvi'] blocked); candidate meets the target in 4 of 5 folds",
+ "production_after": "v2"
+}

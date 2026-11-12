@@ -1,0 +1,42 @@
+{
+ "osm_extract": "thailand-free.shp.zip",
+ "search_radius_m": 20000,
+ "training_points_vs_earth_engine": {
+  "dist_to_road": {
+   "n": 12360,
+   "spearman": 0.9981,
+   "median_abs_diff_m": 13.1,
+   "p90_abs_diff_m": 27.5,
+   "share_within_100m": 0.9994,
+   "median_ee_m": 434.3,
+   "median_local_m": 436.2
+  },
+  "dist_to_river": {
+   "n": 12360,
+   "spearman": 0.9999,
+   "median_abs_diff_m": 13.4,
+   "p90_abs_diff_m": 28.0,
+   "share_within_100m": 0.9999,
+   "median_ee_m": 1513.9,
+   "median_local_m": 1517.7
+  }
+ },
+ "grid": {
+  "dist_to_road": {
+   "cells": 1137629,
+   "ee_missing_share": 0.7738,
+   "local_missing_share": 0.0,
+   "n_compared": 257296,
+   "spearman_where_both": 0.1406,
+   "median_abs_diff_m_where_both": 2324.5
+  },
+  "dist_to_river": {
+   "cells": 1137629,
+   "ee_missing_share": 0.7721,
+   "local_missing_share": 0.0001,
+   "n_compared": 259221,
+   "spearman_where_both": 0.2287,
+   "median_abs_diff_m_where_both": 3074.5
+  }
+ }
+}

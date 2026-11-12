@@ -1,0 +1,5 @@
+{
+ "version": "v2",
+ "path": "models/registry/v2/model.joblib",
+ "reason": "production model v1 is not eligible (['ndvi'] blocked); candidate meets the target in 4 of 5 folds"
+}

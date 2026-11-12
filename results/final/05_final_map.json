@@ -1,0 +1,58 @@
+{
+ "model": "gradient_boosting",
+ "class_share": {
+  "very_low": 0.4,
+  "low": 0.25,
+  "moderate": 0.15,
+  "very_high": 0.1,
+  "high": 0.1
+ },
+ "uncertainty": {
+  "rank_sd_median": 0.0622,
+  "rank_sd_p90": 0.133,
+  "share_same_class_all_five_models": 0.504,
+  "top20_in_all_five_models_over_top20_in_any": 0.5043,
+  "rank_sd_median_by_class": {
+   "high": 0.0458,
+   "low": 0.0652,
+   "moderate": 0.0378,
+   "very_high": 0.0425,
+   "very_low": 0.0839
+  }
+ },
+ "grid_size_sensitivity": {
+  "250m": {
+   "top20_folds": [
+    0.9601,
+    0.5123,
+    0.7956,
+    0.7523,
+    0.9619
+   ],
+   "top20_mean": 0.7964,
+   "note": "a landslide takes the mean score of its coarse cell; cells are the validation blocks"
+  },
+  "500m": {
+   "top20_folds": [
+    0.9743,
+    0.5278,
+    0.7253,
+    0.6739,
+    0.9537
+   ],
+   "top20_mean": 0.771,
+   "note": "a landslide takes the mean score of its coarse cell; cells are the validation blocks"
+  },
+  "1000m": {
+   "top20_folds": [
+    0.9649,
+    0.5535,
+    0.6859,
+    0.7428,
+    0.9464
+   ],
+   "top20_mean": 0.7787,
+   "note": "a landslide takes the mean score of its coarse cell; cells are the validation blocks"
+  }
+ }
+}

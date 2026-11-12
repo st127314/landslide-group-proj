@@ -1,0 +1,31 @@
+{
+ "tambon_tiers": {
+  "low": 799,
+  "moderate": 166,
+  "high": 88
+ },
+ "tambons_without_cells": 2,
+ "people_on_high_very_high": 70561,
+ "people_total": 9385883,
+ "buildings_on_high_very_high": 2925,
+ "buildings_total": 426519,
+ "facilities_on_high_very_high": 34,
+ "facilities_total": 3895,
+ "people_on_high_very_high_by_province_top5": {
+  "Yala": 28558,
+  "Nakhon Si Thammarat": 14652,
+  "Phuket": 8847,
+  "Ranong": 5019,
+  "Surat Thani": 2433
+ },
+ "progress_report_map_for_comparison": {
+  "tambon_tiers": {
+   "low": 753,
+   "moderate": 194,
+   "high": 106
+  },
+  "people_on_high_very_high": 71402,
+  "buildings_on_high_very_high": 5983,
+  "facilities_on_high_very_high": 34
+ }
+}

@@ -75,3 +75,15 @@ key.json
 *.key
 id_rsa*
 active.conf
+
+# Final stage (branch imtiaz): pipeline code, write-up, small results and model metadata; no data or model files
+!/final_pipeline/
+!/FINAL_STAGE.md
+!/results/final/
+/results/final/*.csv.gz
+/results/final/*_log.txt
+!/models/final/
+/models/final/*
+!/models/final/final_model_metadata.json
+!/models/registry/
+/models/registry/**/*.joblib

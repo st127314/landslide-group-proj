@@ -1,0 +1,10 @@
+[Unit]
+Description=GFS refresh every 6 hours (GFS cycles 00/06/12/18 UTC are published about 4 h later)
+
+[Timer]
+OnCalendar=*-*-* 04,10,16,22:30:00 UTC
+Persistent=true
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target

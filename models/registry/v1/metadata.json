@@ -1,0 +1,38 @@
+{
+ "model": "svm_rbf",
+ "stage": "progress report",
+ "features": [
+  "elevation",
+  "slope",
+  "aspect",
+  "curvature_general",
+  "curvature_profile",
+  "tri",
+  "tpi",
+  "ls_factor",
+  "upstream_area_km2",
+  "twi",
+  "spi",
+  "soil_texture",
+  "soil_clay_pct",
+  "soil_sand_pct",
+  "soil_bulk_density",
+  "dist_to_road",
+  "dist_to_river",
+  "lithology",
+  "ndvi",
+  "lulc"
+ ],
+ "data": "data/processed/landslide_event_factors_cleaned.csv",
+ "data_sha256": "d62bfae9b4224150",
+ "sklearn_version": "1.9.0",
+ "metrics": {
+  "heldout_roc_auc": 0.94,
+  "heldout_top20": 0.879
+ },
+ "version": "v1",
+ "model_sha256": "290bde4fc25d9e8e",
+ "registered_at": "2026-11-12T05:22:19",
+ "git_commit": "008f9d1",
+ "status": "candidate"
+}

@@ -1,0 +1,13 @@
+scikit-learn==1.9.0
+numpy
+pandas
+scipy
+joblib
+geopandas
+pyogrio
+shapely
+pyproj
+rasterio
+matplotlib
+# gee_ndvi_annual_composite.py only:
+# earthengine-api

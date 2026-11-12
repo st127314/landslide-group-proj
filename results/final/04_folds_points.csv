@@ -1,0 +1,26 @@
+model,fold,roc_auc,pr_auc,top20,top10,params
+logistic_regression,1,0.9301,0.9478,0.986,0.7967,{'model__C': 0.017073967431528128}
+logistic_regression,2,0.8643,0.9315,0.5177,0.2588,{'model__C': 0.31489116479568624}
+logistic_regression,3,0.942,0.8391,0.921,0.6378,{'model__C': 0.017073967431528128}
+logistic_regression,4,0.8891,0.8394,0.8804,0.7373,{'model__C': 0.04207988669606638}
+logistic_regression,5,0.9476,0.9317,0.9399,0.8182,{'model__C': 0.017073967431528128}
+frequency_ratio,1,0.9204,0.9482,0.9871,0.868,{}
+frequency_ratio,2,0.8536,0.9131,0.4856,0.2279,{}
+frequency_ratio,3,0.9405,0.8519,0.8882,0.5934,{}
+frequency_ratio,4,0.8605,0.7392,0.7428,0.4402,{}
+frequency_ratio,5,0.9493,0.9385,0.9334,0.8287,{}
+svm_rbf,1,0.9353,0.9617,0.9965,0.9381,"{'model__C': 0.1434715951720141, 'model__gamma': 0.05399484409787434}"
+svm_rbf,2,0.8675,0.9282,0.6438,0.4071,"{'model__C': 17.64971584817571, 'model__gamma': 0.0026587543983272706}"
+svm_rbf,3,0.9429,0.8361,0.9403,0.6532,"{'model__C': 0.309556646024237, 'model__gamma': 0.002327067708383781}"
+svm_rbf,4,0.8681,0.7902,0.9293,0.8406,"{'model__C': 17.64971584817571, 'model__gamma': 0.0026587543983272706}"
+svm_rbf,5,0.9448,0.9286,0.9318,0.8076,"{'model__C': 0.26368755339723043, 'model__gamma': 0.002051110418843397}"
+random_forest,1,0.9287,0.9593,0.9895,0.9147,"{'model__max_depth': 'None', 'model__max_features': 0.5, 'model__min_samples_leaf': 3.0}"
+random_forest,2,0.8497,0.9065,0.6217,0.4192,"{'model__max_depth': 10.0, 'model__max_features': 'sqrt', 'model__min_samples_leaf': 2.0}"
+random_forest,3,0.9504,0.8911,0.9133,0.6724,"{'model__max_depth': 10.0, 'model__max_features': 'sqrt', 'model__min_samples_leaf': 2.0}"
+random_forest,4,0.81,0.6371,0.8841,0.8188,"{'model__max_depth': 16.0, 'model__max_features': 'sqrt', 'model__min_samples_leaf': 5.0}"
+random_forest,5,0.9519,0.9452,0.9472,0.8377,"{'model__max_depth': 16.0, 'model__max_features': 'sqrt', 'model__min_samples_leaf': 16.0}"
+gradient_boosting,1,0.9257,0.949,0.9942,0.9357,"{'model__l2_regularization': 0.40137830238462535, 'model__learning_rate': 0.02277411842751364, 'model__max_depth': 5.0, 'model__max_iter': 393.0, 'model__min_samples_leaf': 21.0}"
+gradient_boosting,2,0.8451,0.9088,0.6117,0.1969,"{'model__l2_regularization': 0.06338653441536259, 'model__learning_rate': 0.020620298925997784, 'model__max_depth': 2.0, 'model__max_iter': 113.0, 'model__min_samples_leaf': 28.0}"
+gradient_boosting,3,0.9412,0.8594,0.8844,0.553,"{'model__l2_regularization': 0.06338653441536259, 'model__learning_rate': 0.020620298925997784, 'model__max_depth': 2.0, 'model__max_iter': 113.0, 'model__min_samples_leaf': 28.0}"
+gradient_boosting,4,0.843,0.7295,0.8659,0.8025,"{'model__l2_regularization': 0.06338653441536259, 'model__learning_rate': 0.020620298925997784, 'model__max_depth': 2.0, 'model__max_iter': 113.0, 'model__min_samples_leaf': 28.0}"
+gradient_boosting,5,0.9583,0.9503,0.957,0.8377,"{'model__l2_regularization': 0.06338653441536259, 'model__learning_rate': 0.020620298925997784, 'model__max_depth': 2.0, 'model__max_iter': 113.0, 'model__min_samples_leaf': 28.0}"

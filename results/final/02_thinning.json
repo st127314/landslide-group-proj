@@ -1,0 +1,15 @@
+{
+ "radius_m": 30.0,
+ "landslide_pairs_within_radius": 335,
+ "duplicate_groups": 264,
+ "largest_group": 6,
+ "landslides_dropped": 312,
+ "negatives_dropped": 312,
+ "negatives_without_pair_info": 0,
+ "rows_before": 12360,
+ "rows_after": 11736,
+ "class_counts_after": {
+  "1": 5868,
+  "0": 5868
+ }
+}

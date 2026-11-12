@@ -1,0 +1,11 @@
+[Unit]
+Description=Refresh GFS forecast and landslide impact overlay
+After=network-online.target
+
+[Service]
+Type=oneshot
+Environment=PROJECT_DIR=/opt/landslide/project
+Environment=VENV=/opt/landslide/venv
+ExecStart=/opt/landslide/project/apps/deploy/gfs-refresh.sh
+Nice=10
+MemoryMax=600M
