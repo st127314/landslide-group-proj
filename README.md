@@ -6,7 +6,7 @@ A landslide susceptibility model plus a live-impact view for the 14 southern pro
 
 The project has three parts:
 
-1. **Susceptibility model** — where is terrain prone to landslides? (20 conditioning factors, 6,180 landslide + 6,180 paired non-landslide points, spatial cross-validation, calibrated scores, 250 m map.) **This is the validated part of the project.**
+1. **Susceptibility model** — where is terrain prone to landslides? (19 conditioning factors, 6,180 landslide + 6,180 paired non-landslide points, spatial cross-validation, calibrated scores, 250 m map.) **This is the validated part of the project.**
 2. **Live forecast rainfall** — NOAA GFS rainfall for the next 24 / 48 / 72 / 96 / 120 h (5 days) per tambon, judged against each tambon's own rainfall climate (wet-day percentiles P75/P90/P95 from 30 years of CHIRPS). No machine-learning model: an exploratory rainfall model was tried and shown to have no skill (hold-out ROC-AUC 0.34; `notebooks/rainfall_trigger_threshold.ipynb`, kept as a documented negative result).
 3. **Live impact overlay and what-if scenario** — terrain factor × local rain class → impact class per tambon, plus a "what if X mm falls?" scenario (no extra model); with the buildings, facilities and people at elevated risk, shown per tambon on the dashboard map. A transparent triage rule, **not a validated landslide forecast**.
 
@@ -39,7 +39,7 @@ The landslide inventory was provided by ADPC; cite it accordingly when reusing t
 
 | | |
 |---|---|
-| Susceptibility model (selected by nested spatial CV) | `svm_rbf`; nested-CV ROC-AUC 0.934 ± 0.028; spatial hold-out ROC-AUC 0.940 (95% CI 0.932–0.948), PR-AUC 0.904 |
+| Susceptibility model (selected by nested spatial CV) | `logistic_regression_feature_selected`; nested-CV ROC-AUC 0.912 ± 0.038; spatial hold-out ROC-AUC 0.888, PR-AUC 0.806. NDVI was removed because it was measured after the scar formed (see `docs/METHODS.md`, Known issue 14); with NDVI the hold-out was 0.940 |
 | Map | 1,137,629 cells at 250 m: 63% very low, 7% low, 7% moderate, 11% high, 11% very high |
 | Exposure in high / very-high cells (any weather) | 71,402 of 9,385,884 people (0.76%); 5,983 of 426,519 buildings (1.4%); 34 of 3,895 facilities |
 | Largest exposed populations | Phuket 21,320 (2.1%), Nakhon Si Thammarat 13,625 (1.0%), Yala 12,998 (3.1%), Ranong 5,239 — **these four have almost no landslide training points, so they are extrapolation** |
@@ -48,6 +48,8 @@ The landslide inventory was provided by ADPC; cite it accordingly when reusing t
 | Live forecast snapshot (GFS run 2026-11-10 00:00 UTC) | next 24 h: max 36.1 mm, median 5.3 mm; 766 tambons below their own P75, 188 at P75–P90, 101 at P90–P95 |
 | Live impact for that run | 11 tambons high, 116 moderate, 926 low, 2 not assessed; 1,134 people at elevated risk |
 | What-if scenario (24 h rain, whole south) | 30 mm: 2 very high + 152 high tambons, 30,879 people at elevated risk; 50 mm: 81 very high + 215 high, 51,537 people; 100 mm and above: 54,022 people (classes saturate above each tambon's P95) |
+
+**Not yet updated after the NDVI removal:** the map, exposure, live impact and what-if rows above, the figures and `results/experiments/` still come from the earlier model that used NDVI. They will change once the 250 m grid is re-scored.
 
 Figures are in `results/figures/`. Terrain scores are relative rankings under 1:1 pseudo-absence sampling, not calibrated real-world probabilities, and the negatives are easy lowland points (Known issue 4). The rain thresholds are local climate percentiles, not calibrated on landslides.
 

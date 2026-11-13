@@ -46,7 +46,7 @@ All coordinates are WGS 84 (EPSG:4326) unless stated. Missing values are blank. 
 | `soil_bulk_density` | OpenLandMap raw units | See the OpenLandMap asset description |
 | `dist_to_road`, `dist_to_river` | m | Nearest OSM road / river-or-waterway (≤ 20 km search) |
 | `lithology` | text | GLiM level-1 class (6 occur, plus "No data" for 2 rows) |
-| `ndvi` | −1…1 | Latest valid NDVI in the 90 days before the event day |
+| `ndvi` | −1…1 | Latest valid NDVI in the 90 days before the event day. Not used by the model: the window includes the mapped scar (METHODS, Known issue 14) |
 | `lulc` | text | Land-cover class (SERVIR, Dynamic World fallback) |
 
 `dist_to_stream` is deliberately **not** in this table (its pre-2020 values are on the wrong scale, see `../docs/METHODS.md`); it remains in the raw table. Blank counts: ndvi 446, soil 132, lithology 46, slope/aspect/ls_factor/twi/spi 17, lulc 10, upstream_area_km2 5. `landslide_event_factors_cleaning_report.txt` lists every cleaning step and the 27 columns dropped relative to the raw table.
@@ -97,8 +97,8 @@ Resumable Earth Engine extraction parts, kept so a rerun skips finished work.
 - `imerg_cache/` — raw IMERG point time series (`gee_imerg_antecedent_rainfall.py`).
 
 ## models/
-- `susceptibility/*_pipeline.joblib`, `*_isotonic_calibrator.joblib` — scikit-learn pipeline + isotonic calibrator for the selected model (`svm_rbf`). Loading needs `notebooks/susc_utils.py` on `sys.path`.
-- `susceptibility/model_metadata.json` — selection method, parameters, features, CV and hold-out metrics for all 11 candidates, threshold, limitations. The model uses 20 factors (no `dist_to_stream`).
+- `susceptibility/*_pipeline.joblib`, `*_isotonic_calibrator.joblib` — scikit-learn pipeline + isotonic calibrator for the selected model (`logistic_regression_feature_selected`; `svm_rbf` before NDVI was removed). Loading needs `notebooks/susc_utils.py` on `sys.path`.
+- `susceptibility/model_metadata.json` — selection method, parameters, features, CV and hold-out metrics for all 11 candidates, threshold, limitations. The model uses 19 factors (no `dist_to_stream`, no `ndvi`).
 - `susceptibility/landslide_sample_susceptibility_scores.csv` — `id`, `event_date`, `longitude`, `latitude`, `landslide`, `split` (train / test / embargoed), `heldout_score` (out-of-fold score for retained training rows, hold-out score for test rows; empty for embargoed rows), `final_model_insample_score`, `relative_score_class` (descriptive bins of the calibrated held-out score; blank where there is none).
 - `rainfall_trigger/` — rainfall-trigger pipeline (`random_forest`), calibrator and metadata (13 features, metrics, limitations). **Its hold-out ROC-AUC is 0.34, below chance: the model has no skill and is not used by the live pipeline** (paired same-date negatives, image-date landslide dates; see `../docs/METHODS.md`).
 
