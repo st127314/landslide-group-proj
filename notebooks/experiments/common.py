@@ -34,7 +34,7 @@ GROUPS = {
     'soil': ['soil_texture', 'soil_clay_pct', 'soil_sand_pct', 'soil_bulk_density'],
     'ndvi': ['ndvi'], 'land_cover': ['lulc'], 'lithology': ['lithology'], 'distances': ['dist_to_road', 'dist_to_river'],
 }
-ALL_FEATS = sum(GROUPS.values(), [])
+ALL_FEATS = [c for c in sum(GROUPS.values(), []) if c != 'ndvi']
 
 
 def load(path):

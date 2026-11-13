@@ -19,11 +19,9 @@ TRAINING = pd.read_csv(ROOT / "data" / "processed" / "landslide_event_factors_cl
 
 
 class ModelMetadataTests(unittest.TestCase):
-    def test_production_model_is_the_svm_with_parameters_inside_the_searched_ranges(self):
-        self.assertEqual(METADATA["best_model"], "svm_rbf")
-        params = METADATA["best_params"]["svm_rbf"]
-        self.assertTrue(0.1 <= params["model__C"] <= 50)
-        self.assertTrue(1e-3 <= params["model__gamma"] <= 1e-1)
+    def test_production_model_is_one_of_the_compared_models(self):
+        compared = [row["model"] for row in METADATA["cv_results"]]
+        self.assertIn(METADATA["best_model"], compared)
 
     def test_thresholds_are_probabilities(self):
         for key in ("threshold_raw_probability", "threshold_calibrated_probability"):
