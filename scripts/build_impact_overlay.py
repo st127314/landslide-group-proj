@@ -2,7 +2,7 @@
 
 Joins three finished products:
 
-  1. Terrain susceptibility  -- 250 m scored grid (predict_susceptibility_grid.py; hold-out ROC-AUC 0.94)
+  1. Terrain susceptibility  -- 250 m scored grid (predict_susceptibility_grid.py; hold-out ROC-AUC 0.89)
   2. Forecast rainfall       -- NOAA GFS 24 / 48 / 72 h totals per tambon (run_live_gfs_forecast.py)
   3. Exposure                -- OSM building footprints, OSM critical facilities and the WorldPop 2020
                                 constrained population raster
@@ -290,7 +290,7 @@ def main():
             "the forecast (how unusual the rain is for the tambon) or fixed mm classes; neither is calibrated on landslide "
             "records, whose dates (satellite-image dates) cannot support a calibration.",
             "Terrain susceptibility is a relative ranking from a model trained on 1:1 pseudo-absences "
-            "(held-out ROC-AUC 0.94); exposure figures for provinces with almost no training landslides "
+            "(held-out ROC-AUC 0.89); exposure figures for provinces with almost no training landslides "
             "(Phuket, Yala, Songkhla, Narathiwat, Pattani, Satun, Nakhon Si Thammarat, Ranong) are extrapolation.",
             "Exposure items inherit the class of the nearest 250 m grid cell (<= %d m); items with no nearby cell are in "
             "the totals but in no susceptibility class." % MAX_SNAP_M,
