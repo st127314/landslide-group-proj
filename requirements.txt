@@ -15,6 +15,7 @@ seaborn
 jupyter
 requests
 earthengine-api>=1.7   # only for the Earth Engine steps (needs your own credentials)
+statsmodels
 
 # Not installable from PyPI reliably: GDAL's Python bindings (`osgeo`), used by
 # scripts/build_impact_overlay.py and scripts/download_worldpop_population.py.
