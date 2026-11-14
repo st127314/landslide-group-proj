@@ -1,13 +1,9 @@
-import { ageLabel, isStale } from "@/lib/time";
+import { ageLabel, isStale, thaiTime } from "@/lib/time";
 import { api } from "@/lib/api";
 import { Badge, CLASS_LABELS } from "@/components/Badge";
 import ScenarioPanel from "@/components/ScenarioPanel";
 import Page from "@/components/Page";
 import { CalendarRange, Clock, CloudRain, MapPinned, type LucideIcon } from "lucide-react";
-
-function fmtUtc(iso: string) {
-  return new Date(iso).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short", timeZone: "UTC" }) + " UTC";
-}
 
 function CardLabel({ icon: Icon, children }: { icon: LucideIcon; children: React.ReactNode }) {
   return (
@@ -64,17 +60,17 @@ export default async function WarningPage() {
           <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div className="card p-4">
               <CardLabel icon={Clock}>GFS model run</CardLabel>
-              <div className="mt-2 text-base font-semibold tabular-nums">{fmtUtc(forecast.gfs_run_utc)}</div>
+              <div className="mt-2 text-base font-semibold tabular-nums">{thaiTime(forecast.gfs_run_utc)}</div>
               <div className="mt-1 text-xs text-muted">
-                fetched {fmtUtc(forecast.generated_utc)} · {ageLabel(forecast.generated_utc)}
+                fetched {thaiTime(forecast.generated_utc)} · {ageLabel(forecast.generated_utc)}
               </div>
               {isStale(forecast.generated_utc) && <div className="mt-1 text-xs font-medium" style={{ color: "var(--danger-fg)" }}>Stale: the newest run has not been fetched.</div>}
             </div>
             <div className="card p-4">
               <CardLabel icon={CalendarRange}>Next 24 h window</CardLabel>
-              <div className="mt-2 text-base font-semibold tabular-nums">{fmtUtc(forecast.window_start_utc)}</div>
-              <div className="mt-1 text-xs text-muted">to {fmtUtc(forecast.window_24h_end_utc)}</div>
-              {forecast.window_120h_end_utc && <div className="text-xs text-muted">5-day outlook to {fmtUtc(forecast.window_120h_end_utc)}</div>}
+              <div className="mt-2 text-base font-semibold tabular-nums">{thaiTime(forecast.window_start_utc)}</div>
+              <div className="mt-1 text-xs text-muted">to {thaiTime(forecast.window_24h_end_utc)}</div>
+              {forecast.window_120h_end_utc && <div className="text-xs text-muted">5-day outlook to {thaiTime(forecast.window_120h_end_utc)}</div>}
             </div>
             <div className="card p-4">
               <CardLabel icon={CloudRain}>Heaviest 24 h forecast</CardLabel>

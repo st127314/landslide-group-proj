@@ -6,9 +6,9 @@ import type { Map as MapLibreMap } from "maplibre-gl";
 import type { FeatureCollection } from "geojson";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { Protocol } from "pmtiles";
-import { ChartNoAxesColumn, ChevronDown, Layers as LayersIcon, List, MapPin, MapPinned, Search, TriangleAlert, X } from "lucide-react";
+import { ChartNoAxesColumn, ChevronDown, Info, Layers as LayersIcon, List, MapPin, MapPinned, Search, TriangleAlert, X } from "lucide-react";
 import ImpactCharts, { RainOutlook } from "@/components/ImpactCharts";
-import { ageLabel, isStale } from "@/lib/time";
+import { ageLabel, isStale, thaiTime } from "@/lib/time";
 import { api, type ImpactOverlay, type OverlayTambon, type ScenarioResult, type TambonClasses } from "@/lib/api";
 
 // Served from public/ (copied there by scripts/copy-maplibre-worker.mjs): the bundle does not ship the worker.
@@ -215,8 +215,8 @@ export default function ImpactMap() {
     boundary: true,
     susceptibilityGrid: true,
     susceptibility: false,
-    facilities: true,
-    buildings: true,
+    facilities: false,   // off by default so the tambon colours are readable; one click in Layers turns them on
+    buildings: false,
   });
   // Panels start collapsed on a phone so the map is not covered.
   const [wide] = useState(() => typeof window === "undefined" || window.innerWidth >= 640);
@@ -658,13 +658,7 @@ export default function ImpactMap() {
                     </label>
                   ) : (
                     <p className="mt-1.5 text-muted">
-                      GFS run{" "}
-                      {new Date(overlay.metadata.gfs_run_utc).toLocaleString(undefined, {
-                        dateStyle: "medium",
-                        timeStyle: "short",
-                        timeZone: "UTC",
-                      })}{" "}
-                      UTC ({ageLabel(overlay.metadata.gfs_run_utc)}), next 24 h.
+                      GFS run {thaiTime(overlay.metadata.gfs_run_utc)} ({ageLabel(overlay.metadata.gfs_run_utc)}), next 24 h.
                       {isStale(overlay.metadata.gfs_run_utc) && <span className="ml-1 font-medium" style={{ color: "var(--danger-fg)" }}>Forecast is stale.</span>}
                     </p>
                   )}
@@ -749,15 +743,36 @@ export default function ImpactMap() {
       {/* Legend */}
       {!legendEmpty && (
         <div className="map-panel absolute bottom-8 right-3 flex max-h-[45%] w-[min(15rem,calc(100%-1.5rem))] flex-col">
-          <button
-            type="button"
-            onClick={() => setLegendOpen((o) => !o)}
-            className="flex w-full items-center justify-between px-4 py-2.5"
-            aria-expanded={legendOpen}
-          >
-            <span className="flex items-center gap-2 font-semibold"><List className="h-4 w-4 text-accent" aria-hidden />Legend</span>
-            <Chevron open={legendOpen} />
-          </button>
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setLegendOpen((o) => !o)}
+              className="flex w-full items-center justify-between px-4 py-2.5"
+              aria-expanded={legendOpen}
+            >
+              <span className="flex items-center gap-2 font-semibold"><List className="h-4 w-4 text-accent" aria-hidden />Legend</span>
+              <Chevron open={legendOpen} />
+            </button>
+            {/* How to read the map: shown on hover or keyboard focus, so it does not take space in the legend. It sits
+                beside the toggle, not inside it, because a button cannot contain another control. */}
+            <span className="group/info absolute right-10 top-1/2 -translate-y-1/2">
+              <button
+                type="button"
+                aria-label="How to read this map"
+                aria-describedby="legend-note"
+                className="flex h-6 w-6 items-center justify-center rounded-full text-subtle hover:text-fg focus-visible:text-fg"
+              >
+                <Info className="h-4 w-4" aria-hidden />
+              </button>
+              <span
+                id="legend-note"
+                role="tooltip"
+                className="map-panel pointer-events-none absolute bottom-full right-0 z-20 mb-2 hidden w-56 p-3 text-xs leading-snug text-muted group-focus-within/info:block group-hover/info:block"
+              >
+                {LEGEND_NOTE}
+              </span>
+            </span>
+          </div>
           {legendOpen && (
             <div className="space-y-3 overflow-y-auto border-t border-line px-4 py-3 text-xs">
               {layers.tambons && tambonsReady && (
@@ -789,9 +804,6 @@ export default function ImpactMap() {
                   <LegendRow swatch={<Swatch color={BUILDING_COLOR} />} label="Building footprint" />
                 </LegendSection>
               )}
-              <p className="leading-snug text-subtle">
-                Live impact is a triage rule, not a landslide forecast. Susceptibility is relative, not a probability.
-              </p>
             </div>
           )}
         </div>
@@ -976,6 +988,8 @@ function Segmented<T extends string>({
     </div>
   );
 }
+
+const LEGEND_NOTE = "Live impact is a triage rule, not a landslide forecast. Susceptibility is relative, not a probability.";
 
 function LegendSection({ title, columns = false, children }: { title: string; columns?: boolean; children: React.ReactNode }) {
   return (

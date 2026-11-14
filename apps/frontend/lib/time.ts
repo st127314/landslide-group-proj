@@ -11,3 +11,9 @@ export function ageLabel(iso: string | null | undefined, now: number = Date.now(
 export function isStale(iso: string | null | undefined, maxHours = 18, now: number = Date.now()): boolean {
   return !!iso && (now - new Date(iso).getTime()) / 3_600_000 > maxHours;
 }
+
+/** A timestamp on the Thai clock (UTC+7, no daylight saving), labelled so it cannot be read as UTC. The dashboard's
+ *  users are in Thailand; the forecast files keep UTC. */
+export function thaiTime(iso: string): string {
+  return new Date(iso).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Bangkok" }) + " Thailand time";
+}
