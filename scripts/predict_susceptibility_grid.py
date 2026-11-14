@@ -5,6 +5,9 @@ use.
 Requires scikit-learn, joblib and GDAL. Run:
     python scripts/predict_susceptibility_grid.py
 
+Before scoring, check_grid_inputs.py compares every factor on the grid with the training table; a new mismatch
+stops the run (--skip-input-check overrides).
+
 Inputs:
   - data/processed/factor_grid_points/factor_grid_points_<date>/*.csv
     (from gee_sample_factor_grid_points.py; see that script's docstring for
@@ -81,10 +84,22 @@ def main():
                         help="Defaults to the most recent data/processed/factor_grid_points/factor_grid_points_* directory.")
     parser.add_argument("--raster-scale-m", type=float, default=250,
                         help="Output raster cell size; matches the point spacing by default.")
+    parser.add_argument("--skip-input-check", action="store_true",
+                        help="Score the grid even if a factor on it differs from the training table (see check_grid_inputs.py).")
     args = parser.parse_args()
 
     grid_dir = args.grid_dir or latest_grid_dir()
     print(f"Grid directory: {grid_dir}")
+
+    # The same code runs in training and here, but the same data must arrive too: stop before scoring if a factor on
+    # the grid is blank, on another scale or has unseen classes, unless the mismatch is one of the documented ones.
+    if not args.skip_input_check:
+        from check_grid_inputs import run as check_grid_inputs
+        report, failed = check_grid_inputs(grid_dir, quiet=True)
+        print(f"Input check: {report['summary']}")
+        if failed:
+            sys.exit("Grid inputs differ from the training table for: " + ", ".join(failed)
+                     + ". Run scripts/check_grid_inputs.py for the details, or pass --skip-input-check.")
 
     metadata = json.loads((MODEL_ARTIFACT_DIR / "model_metadata.json").read_text())
     best_model = metadata["best_model"]

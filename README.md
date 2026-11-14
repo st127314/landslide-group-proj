@@ -20,6 +20,7 @@ The repository holds what a team member needs to run and extend the modelling no
 |---|---|
 | `notebooks/` | susceptibility modelling and rainfall-trigger notebooks, plus `susc_utils.py` |
 | `notebooks/experiments/` | `run_experiments.py`: experiments E1–E7, error analysis and partial dependence; `run_followup_experiments.py`: follow-ups F0–F5 (permutation importance, near-duplicate thinning, the decision value on the map by factor set, environment-matched negatives, the final-review checks on NDVI, the missing-value indicators and the hold-out interval, and the grid's road and river distances); `common.py`: shared folds, preprocessing and models |
+| `notebooks/tracking.py` | experiment tracking with MLflow on the local machine: one run per candidate model and per experiment configuration, and the selected pipeline as a version in a local model registry (`mlflow.db` and `mlartifacts/`, not in git) |
 | `scripts/` | data pipeline: Earth Engine extraction, negative sampling, cleaning, grid prediction, rainfall percentiles, live forecast, impact overlay, web layers and tiles, figures (see `scripts/README.md`) |
 | `data/processed/landslide_event_factors_cleaned.csv` | model-ready table: 6,180 landslide + 6,180 paired non-landslide points, the 19 conditioning factors of the model plus NDVI, which is kept in the table but not used (input of the susceptibility notebook) |
 | `data/processed/*_antecedent_rainfall.csv` | IMERG antecedent rainfall per event (input of the rainfall-trigger notebook) |
@@ -96,7 +97,8 @@ Regenerable intermediates that are not kept in `data/external/`: the OSM roads /
 | 4b | `scripts/assemble_paired_dataset.py` (strict checks; uses `clean_event_factors.py`) | `data/processed/landslide_event_factors.csv` (both classes), `landslide_event_factors_cleaned.csv`, cleaning report |
 | 5 | `notebooks/landslide_susceptibility_modeling.ipynb` | `models/susceptibility/` |
 | 5b | `notebooks/experiments/run_experiments.py`, `run_followup_experiments.py` | `results/experiments/` |
-| 6 | `scripts/gee_sample_factor_grid_points.py` (Earth Engine) → `data/processed/factor_grid_points/` (local only, not in git), then `predict_susceptibility_grid.py` | `results/susceptibility_map/` |
+| 5c | `notebooks/tracking.py --experiments` (optional; the notebook logs its own model comparison). View with `mlflow ui --backend-store-uri sqlite:///mlflow.db` | local MLflow store: `mlflow.db`, `mlartifacts/` |
+| 6 | `scripts/gee_sample_factor_grid_points.py` (Earth Engine) → `data/processed/factor_grid_points/` (local only, not in git), then `check_grid_inputs.py` (compares every factor on the grid with the training table; a new mismatch stops the scoring) and `predict_susceptibility_grid.py` | `results/susceptibility_map/` |
 | 7 | `notebooks/rainfall_trigger_threshold.ipynb` (exploratory, no skill; not used downstream) | `models/rainfall_trigger/` |
 | 7b | `scripts/compute_rain_percentiles.py` (Earth Engine, ~1 min, one-off) | `data/external/rain_percentiles_24h_tambon.csv` |
 | 8 | `scripts/run_live_gfs_forecast.py` (Earth Engine, ~10 s; rerun for a fresh forecast) | `results/live_forecast/latest.json` |

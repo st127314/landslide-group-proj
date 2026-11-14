@@ -1,0 +1,315 @@
+{
+ "grid": "factor_grid_points_2026-10-09",
+ "cells": 1137629,
+ "training_rows": 12360,
+ "model": "logistic_regression_feature_selected",
+ "thresholds": {
+  "max_extra_blank_share": 0.1,
+  "max_median_ratio": 3.0,
+  "min_spearman": 0.2,
+  "max_unseen_class_share": 0.01,
+  "cell_match_m": 180.0
+ },
+ "summary": {
+  "ok": 13,
+  "warning": 2,
+  "known": 4,
+  "fail": 0
+ },
+ "matched_points": 12343,
+ "factors": {
+  "elevation": {
+   "type": "numeric",
+   "blank_share": {
+    "training": 0.0,
+    "grid": 0.0
+   },
+   "same_place_pairs": 12343,
+   "same_place_median": {
+    "training": 181.0,
+    "grid": 183.0
+   },
+   "same_place_spearman": 0.988,
+   "same_place_median_ratio": 1.011,
+   "status": "ok"
+  },
+  "slope": {
+   "type": "numeric",
+   "blank_share": {
+    "training": 0.0014,
+    "grid": 0.0
+   },
+   "same_place_pairs": 12329,
+   "same_place_median": {
+    "training": 20.0,
+    "grid": 18.0
+   },
+   "same_place_spearman": 0.721,
+   "same_place_median_ratio": 0.9,
+   "status": "ok"
+  },
+  "aspect": {
+   "type": "numeric",
+   "blank_share": {
+    "training": 0.0014,
+    "grid": 0.0
+   },
+   "same_place_pairs": 12329,
+   "same_place_median": {
+    "training": 156.0,
+    "grid": 167.0
+   },
+   "same_place_spearman": 0.336,
+   "status": "ok"
+  },
+  "curvature_general": {
+   "type": "numeric",
+   "blank_share": {
+    "training": 0.0,
+    "grid": 0.0
+   },
+   "same_place_pairs": 12343,
+   "same_place_median": {
+    "training": 4.0,
+    "grid": 0.0
+   },
+   "same_place_spearman": 0.032,
+   "status": "warning",
+   "reasons": [
+    "weak agreement at the same places"
+   ]
+  },
+  "curvature_profile": {
+   "type": "numeric",
+   "blank_share": {
+    "training": 0.0,
+    "grid": 0.0
+   },
+   "same_place_pairs": 12343,
+   "same_place_median": {
+    "training": 10.904,
+    "grid": 9.548
+   },
+   "same_place_spearman": 0.743,
+   "same_place_median_ratio": 0.876,
+   "status": "ok"
+  },
+  "tri": {
+   "type": "numeric",
+   "blank_share": {
+    "training": 0.0,
+    "grid": 0.0
+   },
+   "same_place_pairs": 12343,
+   "same_place_median": {
+    "training": 2.37,
+    "grid": 2.37
+   },
+   "same_place_spearman": 0.722,
+   "same_place_median_ratio": 1.0,
+   "status": "ok"
+  },
+  "tpi": {
+   "type": "numeric",
+   "blank_share": {
+    "training": 0.0,
+    "grid": 0.0
+   },
+   "same_place_pairs": 12343,
+   "same_place_median": {
+    "training": -1.069,
+    "grid": -0.103
+   },
+   "same_place_spearman": 0.095,
+   "status": "warning",
+   "reasons": [
+    "weak agreement at the same places"
+   ]
+  },
+  "ls_factor": {
+   "type": "numeric",
+   "blank_share": {
+    "training": 0.0014,
+    "grid": 0.0
+   },
+   "same_place_pairs": 12329,
+   "same_place_median": {
+    "training": 8.015,
+    "grid": 6.342
+   },
+   "same_place_spearman": 0.775,
+   "status": "ok"
+  },
+  "upstream_area_km2": {
+   "type": "numeric",
+   "blank_share": {
+    "training": 0.0004,
+    "grid": 0.0
+   },
+   "same_place_pairs": 12341,
+   "same_place_median": {
+    "training": 0.212,
+    "grid": 0.02
+   },
+   "same_place_spearman": 0.217,
+   "same_place_median_ratio": 0.094,
+   "status": "known",
+   "reasons": [
+    "scale"
+   ],
+   "note": "hydrology comes from a 500 m source in training and a 90 m source on the grid (METHODS, Known issue 11)"
+  },
+  "twi": {
+   "type": "numeric",
+   "blank_share": {
+    "training": 0.0014,
+    "grid": 0.0
+   },
+   "same_place_pairs": 12329,
+   "same_place_median": {
+    "training": 7.782,
+    "grid": 6.798
+   },
+   "same_place_spearman": 0.633,
+   "same_place_median_ratio": 0.874,
+   "status": "ok"
+  },
+  "spi": {
+   "type": "numeric",
+   "blank_share": {
+    "training": 0.0014,
+    "grid": 0.0
+   },
+   "same_place_pairs": 12329,
+   "same_place_median": {
+    "training": 267.738,
+    "grid": 68.199
+   },
+   "same_place_spearman": 0.362,
+   "same_place_median_ratio": 0.255,
+   "status": "known",
+   "reasons": [
+    "scale"
+   ],
+   "note": "hydrology comes from a 500 m source in training and a 90 m source on the grid (METHODS, Known issue 11)"
+  },
+  "soil_clay_pct": {
+   "type": "numeric",
+   "blank_share": {
+    "training": 0.0107,
+    "grid": 0.0171
+   },
+   "same_place_pairs": 12216,
+   "same_place_median": {
+    "training": 29.0,
+    "grid": 29.0
+   },
+   "same_place_spearman": 0.937,
+   "same_place_median_ratio": 1.0,
+   "status": "ok"
+  },
+  "soil_sand_pct": {
+   "type": "numeric",
+   "blank_share": {
+    "training": 0.0107,
+    "grid": 0.0171
+   },
+   "same_place_pairs": 12216,
+   "same_place_median": {
+    "training": 45.0,
+    "grid": 46.0
+   },
+   "same_place_spearman": 0.938,
+   "same_place_median_ratio": 1.022,
+   "status": "ok"
+  },
+  "soil_bulk_density": {
+   "type": "numeric",
+   "blank_share": {
+    "training": 0.0107,
+    "grid": 0.0171
+   },
+   "same_place_pairs": 12216,
+   "same_place_median": {
+    "training": 117.0,
+    "grid": 117.0
+   },
+   "same_place_spearman": 0.894,
+   "same_place_median_ratio": 1.0,
+   "status": "ok"
+  },
+  "dist_to_road": {
+   "type": "numeric",
+   "blank_share": {
+    "training": 0.0,
+    "grid": 0.7738
+   },
+   "same_place_pairs": 2073,
+   "same_place_median": {
+    "training": 163.709,
+    "grid": 11624.861
+   },
+   "same_place_spearman": -0.175,
+   "same_place_median_ratio": 71.009,
+   "status": "known",
+   "reasons": [
+    "coverage",
+    "scale"
+   ],
+   "note": "blank in most grid tiles and wrong where present (METHODS, Known issue 15)"
+  },
+  "dist_to_river": {
+   "type": "numeric",
+   "blank_share": {
+    "training": 0.0,
+    "grid": 0.7721
+   },
+   "same_place_pairs": 2073,
+   "same_place_median": {
+    "training": 1864.44,
+    "grid": 15293.441
+   },
+   "same_place_spearman": 0.063,
+   "same_place_median_ratio": 8.203,
+   "status": "known",
+   "reasons": [
+    "coverage",
+    "scale"
+   ],
+   "note": "blank in most grid tiles and wrong where present (METHODS, Known issue 15)"
+  },
+  "lithology": {
+   "type": "categorical",
+   "blank_share": {
+    "training": 0.0037,
+    "grid": 0.0141
+   },
+   "same_place_pairs": 12297,
+   "unseen_class_share": 0.0,
+   "same_place_class_agreement": 0.989,
+   "status": "ok"
+  },
+  "lulc": {
+   "type": "categorical",
+   "blank_share": {
+    "training": 0.0008,
+    "grid": 0.0
+   },
+   "same_place_pairs": 12333,
+   "unseen_class_share": 0.0,
+   "same_place_class_agreement": 0.677,
+   "status": "ok"
+  },
+  "soil_texture": {
+   "type": "categorical",
+   "blank_share": {
+    "training": 0.0107,
+    "grid": 0.0249
+   },
+   "same_place_pairs": 12194,
+   "unseen_class_share": 0.0001,
+   "same_place_class_agreement": 0.868,
+   "status": "ok"
+  }
+ }
+}
