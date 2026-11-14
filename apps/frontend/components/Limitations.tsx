@@ -18,8 +18,9 @@ const GROUPS = {
       "The task is easier than it looks: non-landslide points are mostly lowland (median slope 7° against 29° for landslides), so the high ROC-AUC partly reflects that contrast.",
       "Spatial cross-validation with a 5 km embargo is stricter than random splits but cannot remove the issues above.",
       "The model separates hillslopes from lowland; it does not rank comparable slopes. Against negatives matched on slope and elevation its ROC-AUC is about 0.5.",
-      "On the map, 61% of held-out landslides fall in the highest-scoring 20% of 250 m cells: three times chance, below the 70% the project aimed for.",
-      "NDVI and the hydrology factors come from different sources on the map than in training, and add nothing there; a retrained model should drop them.",
+      "On the map, 60% of held-out landslides fall in the highest-scoring 20% of 250 m cells: three times chance, below the 70% the project aimed for.",
+      "NDVI was removed from the model: it was measured after the scar formed, so it leaked the answer. That lowered the held-out ROC-AUC from 0.94 to 0.89, the more honest figure.",
+      "The hydrology factors and the road and river distances come from different sources on the map than in training, and add nothing there.",
     ],
   },
   forecast: {

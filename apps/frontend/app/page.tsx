@@ -10,7 +10,7 @@ const COMPONENTS = [
     icon: Mountain,
     step: "Where",
     title: "Terrain susceptibility",
-    text: "A machine-learning model trained on 6,180 mapped landslides rates every 250 m cell from very low to very high, using terrain, soil, geology, vegetation and land-cover factors.",
+    text: "A machine-learning model trained on 6,180 mapped landslides rates every 250 m cell from very low to very high, using terrain, water-flow, soil, geology and land-cover factors.",
   },
   {
     icon: CloudRain,

@@ -19,9 +19,9 @@ The repository holds what a team member needs to run and extend the modelling no
 | Path | Contents |
 |---|---|
 | `notebooks/` | susceptibility modelling and rainfall-trigger notebooks, plus `susc_utils.py` |
-| `notebooks/experiments/` | `run_experiments.py`: experiments E1–E7, error analysis and partial dependence; `run_followup_experiments.py`: follow-ups F1–F3 (near-duplicate thinning, model without NDVI and hydrology with a like-for-like decision value, environment-matched negatives); `common.py`: shared folds, preprocessing and models |
+| `notebooks/experiments/` | `run_experiments.py`: experiments E1–E7, error analysis and partial dependence; `run_followup_experiments.py`: follow-ups F0–F5 (permutation importance, near-duplicate thinning, the decision value on the map by factor set, environment-matched negatives, the final-review checks on NDVI, the missing-value indicators and the hold-out interval, and the grid's road and river distances); `common.py`: shared folds, preprocessing and models |
 | `scripts/` | data pipeline: Earth Engine extraction, negative sampling, cleaning, grid prediction, rainfall percentiles, live forecast, impact overlay, web layers and tiles, figures (see `scripts/README.md`) |
-| `data/processed/landslide_event_factors_cleaned.csv` | model-ready table: 6,180 landslide + 6,180 paired non-landslide points, 20 conditioning factors (input of the susceptibility notebook) |
+| `data/processed/landslide_event_factors_cleaned.csv` | model-ready table: 6,180 landslide + 6,180 paired non-landslide points, the 19 conditioning factors of the model plus NDVI, which is kept in the table but not used (input of the susceptibility notebook) |
 | `data/processed/*_antecedent_rainfall.csv` | IMERG antecedent rainfall per event (input of the rainfall-trigger notebook) |
 | `data/processed/landslide_event_factors_cleaning_report.txt`, `data/DATA_DICTIONARY.md` | how the table was cleaned; meaning of every column |
 | `models/*/model_metadata.json`, `models/rainfall_trigger/rainfall_trigger_metadata.json` | cross-validation and hold-out scores of every candidate model, selected hyperparameters |
@@ -39,17 +39,17 @@ The landslide inventory was provided by ADPC; cite it accordingly when reusing t
 
 | | |
 |---|---|
-| Susceptibility model (selected by nested spatial CV) | `logistic_regression_feature_selected`; nested-CV ROC-AUC 0.912 ± 0.038; spatial hold-out ROC-AUC 0.888, PR-AUC 0.806. NDVI was removed because it was measured after the scar formed (see `docs/METHODS.md`, Known issue 14); with NDVI the hold-out was 0.940 |
-| Map | 1,137,629 cells at 250 m: 63% very low, 7% low, 7% moderate, 11% high, 11% very high |
-| Exposure in high / very-high cells (any weather) | 71,402 of 9,385,884 people (0.76%); 5,983 of 426,519 buildings (1.4%); 34 of 3,895 facilities |
-| Largest exposed populations | Phuket 21,320 (2.1%), Nakhon Si Thammarat 13,625 (1.0%), Yala 12,998 (3.1%), Ranong 5,239 — **these four have almost no landslide training points, so they are extrapolation** |
-| Held-out landslides in the map's top 20% of cells (like for like, `followup.json` F2) | 61% for the selected model (59% logistic regression, 65% terrain-only SVM); no skill = 20% |
+| Susceptibility model (selected by nested spatial CV) | `logistic_regression_feature_selected` (19 factors); nested-CV ROC-AUC 0.918 ± 0.030; spatial hold-out ROC-AUC 0.888, PR-AUC 0.806. Plain logistic regression is within the fold spread (0.910 ± 0.039). NDVI was removed because it was measured after the scar formed (see `docs/METHODS.md`, Known issue 14); with NDVI the hold-out was 0.940 |
+| Map | 1,137,629 cells at 250 m: 68% very low, 4% low, 5% moderate, 8% high, 15% very high |
+| Exposure in high / very-high cells (any weather) | 55,669 of 9,385,884 people (0.59%); 3,947 of 426,519 buildings (0.9%); 32 of 3,895 facilities |
+| Largest exposed populations | Nakhon Si Thammarat 13,941 (1.0%), Yala 11,464 (2.7%), Phuket 10,603 (1.0%), Ranong 4,015 — **these four have almost no landslide training points, so they are extrapolation** |
+| Held-out landslides in the map's top 20% of cells (like for like, `followup.json` F2) | 60% for the selected model (59% plain logistic regression, 61% SVM, 62% terrain factors only); no skill = 20%. Removing NDVI did not change this figure |
 | Environment-matched negatives (F3) | ROC-AUC ≈ 0.50 when negatives have the same slope and elevation as the landslides: the model separates hillslopes from lowland, not failed from unfailed slopes |
 | Live forecast snapshot (GFS run 2026-11-10 00:00 UTC) | next 24 h: max 36.1 mm, median 5.3 mm; 766 tambons below their own P75, 188 at P75–P90, 101 at P90–P95 |
-| Live impact for that run | 11 tambons high, 116 moderate, 926 low, 2 not assessed; 1,134 people at elevated risk |
-| What-if scenario (24 h rain, whole south) | 30 mm: 2 very high + 152 high tambons, 30,879 people at elevated risk; 50 mm: 81 very high + 215 high, 51,537 people; 100 mm and above: 54,022 people (classes saturate above each tambon's P95) |
+| Live impact for that run | 11 tambons high, 112 moderate, 930 low, 2 not assessed; 1,024 people at elevated risk |
+| What-if scenario (24 h rain, whole south) | 30 mm: 1 very high + 153 high tambons, 21,977 people at elevated risk; 50 mm: 82 very high + 213 high, 38,809 people; 100 mm and above: 40,841 people (classes saturate above each tambon's P95) |
 
-**Not yet updated after the NDVI removal:** the map, exposure, live impact and what-if rows above, the figures and `results/experiments/` still come from the earlier model that used NDVI. They will change once the 250 m grid is re-scored.
+The map, the exposure figures, the live-impact overlay, the figures and `results/experiments/` were all regenerated on 2026-11-14 with the model without NDVI.
 
 Figures are in `results/figures/`. Terrain scores are relative rankings under 1:1 pseudo-absence sampling, not calibrated real-world probabilities, and the negatives are easy lowland points (Known issue 4). The rain thresholds are local climate percentiles, not calibrated on landslides.
 

@@ -5,118 +5,118 @@
    "n_landslide": 0,
    "miss_rate": 0.0,
    "n_neg": 477,
-   "false_alarm_rate": 0.298
+   "false_alarm_rate": 0.335
   },
   {
    "province": "Krabi",
    "n_landslide": 207,
-   "miss_rate": 0.005,
+   "miss_rate": 0.01,
    "n_neg": 320,
-   "false_alarm_rate": 0.05
+   "false_alarm_rate": 0.075
   },
   {
    "province": "Phangnga",
    "n_landslide": 275,
-   "miss_rate": 0.007,
+   "miss_rate": 0.0,
    "n_neg": 222,
-   "false_alarm_rate": 0.464
+   "false_alarm_rate": 0.541
   },
   {
    "province": "Surat Thani",
    "n_landslide": 641,
-   "miss_rate": 0.02,
+   "miss_rate": 0.033,
    "n_neg": 486,
-   "false_alarm_rate": 0.475
+   "false_alarm_rate": 0.527
   }
  ],
  "slope_band": [
   {
    "slope_band": "0-10",
    "n_landslide": 20,
-   "miss_rate": 0.05,
+   "miss_rate": 0.1,
    "n_neg": 778,
-   "false_alarm_rate": 0.017
+   "false_alarm_rate": 0.021
   },
   {
    "slope_band": "10-20",
    "n_landslide": 181,
-   "miss_rate": 0.061,
+   "miss_rate": 0.072,
    "n_neg": 290,
-   "false_alarm_rate": 0.348
+   "false_alarm_rate": 0.459
   },
   {
    "slope_band": "20-30",
    "n_landslide": 390,
-   "miss_rate": 0.008,
+   "miss_rate": 0.018,
    "n_neg": 237,
-   "false_alarm_rate": 0.819
+   "false_alarm_rate": 0.911
   },
   {
    "slope_band": ">30",
    "n_landslide": 532,
    "miss_rate": 0.002,
    "n_neg": 197,
-   "false_alarm_rate": 0.934
+   "false_alarm_rate": 0.99
   }
  ],
  "elev_band": [
   {
    "elev_band": "<100",
    "n_landslide": 17,
-   "miss_rate": 0.176,
+   "miss_rate": 0.353,
    "n_neg": 778,
-   "false_alarm_rate": 0.039
+   "false_alarm_rate": 0.045
   },
   {
    "elev_band": "100-300",
    "n_landslide": 372,
-   "miss_rate": 0.032,
+   "miss_rate": 0.043,
    "n_neg": 507,
-   "false_alarm_rate": 0.578
+   "false_alarm_rate": 0.627
   },
   {
    "elev_band": "300-600",
    "n_landslide": 693,
    "miss_rate": 0.001,
    "n_neg": 187,
-   "false_alarm_rate": 0.765
+   "false_alarm_rate": 0.941
   },
   {
    "elev_band": ">600",
    "n_landslide": 41,
    "miss_rate": 0.0,
    "n_neg": 33,
-   "false_alarm_rate": 0.788
+   "false_alarm_rate": 0.939
   }
  ],
  "road_band": [
   {
    "road_band": "<250 m",
    "n_landslide": 272,
-   "miss_rate": 0.022,
+   "miss_rate": 0.04,
    "n_neg": 789,
-   "false_alarm_rate": 0.118
+   "false_alarm_rate": 0.143
   },
   {
    "road_band": "250-1000 m",
    "n_landslide": 255,
-   "miss_rate": 0.024,
+   "miss_rate": 0.035,
    "n_neg": 438,
-   "false_alarm_rate": 0.443
+   "false_alarm_rate": 0.473
   },
   {
    "road_band": ">1 km",
    "n_landslide": 596,
-   "miss_rate": 0.007,
+   "miss_rate": 0.005,
    "n_neg": 278,
-   "false_alarm_rate": 0.737
+   "false_alarm_rate": 0.863
   }
  ],
  "lithology": [
   {
    "lithology": "Acid plutonic rocks",
    "n_landslide": 243,
-   "miss_rate": 0.0,
+   "miss_rate": 0.012,
    "n_neg": 83,
    "false_alarm_rate": 0.0
   },
@@ -125,21 +125,21 @@
    "n_landslide": 7,
    "miss_rate": 0.0,
    "n_neg": 331,
-   "false_alarm_rate": 0.347
+   "false_alarm_rate": 0.372
   },
   {
    "lithology": "Mixed sedimentary rocks",
    "n_landslide": 805,
    "miss_rate": 0.011,
    "n_neg": 650,
-   "false_alarm_rate": 0.531
+   "false_alarm_rate": 0.617
   },
   {
    "lithology": "Unconsolidated sediments",
    "n_landslide": 68,
-   "miss_rate": 0.103,
+   "miss_rate": 0.162,
    "n_neg": 438,
-   "false_alarm_rate": 0.073
+   "false_alarm_rate": 0.082
   }
  ],
  "lulc": [
@@ -155,28 +155,28 @@
    "n_landslide": 1,
    "miss_rate": 0.0,
    "n_neg": 42,
-   "false_alarm_rate": 0.024
+   "false_alarm_rate": 0.048
   },
   {
    "lulc": "cropland",
    "n_landslide": 0,
    "miss_rate": 0.0,
    "n_neg": 27,
-   "false_alarm_rate": 0.037
+   "false_alarm_rate": 0.0
   },
   {
    "lulc": "deciduous",
    "n_landslide": 37,
    "miss_rate": 0.0,
    "n_neg": 175,
-   "false_alarm_rate": 0.269
+   "false_alarm_rate": 0.28
   },
   {
    "lulc": "evergreen",
    "n_landslide": 933,
-   "miss_rate": 0.006,
+   "miss_rate": 0.011,
    "n_neg": 409,
-   "false_alarm_rate": 0.758
+   "false_alarm_rate": 0.873
   },
   {
    "lulc": "floodedForest",
@@ -218,14 +218,14 @@
    "n_landslide": 0,
    "miss_rate": 0.0,
    "n_neg": 27,
-   "false_alarm_rate": 0.148
+   "false_alarm_rate": 0.296
   },
   {
    "lulc": "shrub",
    "n_landslide": 149,
-   "miss_rate": 0.067,
+   "miss_rate": 0.087,
    "n_neg": 496,
-   "false_alarm_rate": 0.254
+   "false_alarm_rate": 0.284
   },
   {
    "lulc": "urban",
@@ -250,37 +250,41 @@
   }
  ],
  "confusion": {
-  "detected": 1107,
-  "missed": 16,
-  "false_alarms": 492,
-  "correct_negatives": 1013
+  "detected": 1100,
+  "missed": 23,
+  "false_alarms": 560,
+  "correct_negatives": 945
  },
  "ndvi_median": {
   "landslides": 0.76267015914593,
   "negatives": 0.8093555601495986,
-  "detected_test_landslides": 0.7649989620095495,
-  "missed_test_landslides": 0.8311446240287594
+  "detected_test_landslides": 0.7653418154717998,
+  "missed_test_landslides": 0.7875355166741438
  },
  "calibration": {
   "raw_slope_intercept": [
-   1.024,
-   -1.153
+   0.951,
+   -1.117
   ],
   "isotonic_slope_intercept": [
-   1.681,
-   -2.004
+   1.673,
+   -2.108
   ]
  },
  "decision_heldout_blocks": {
   "n_cells_heldout_area": 69282,
   "n_heldout_landslides": 1123,
   "lr": {
-   "top20": 0.6536,
-   "top10": 0.3589
+   "top20": 0.7507,
+   "top10": 0.3927
+  },
+  "lrfs": {
+   "top20": 0.7667,
+   "top10": 0.4185
   },
   "svm": {
-   "top20": 0.8789,
-   "top10": 0.6768
+   "top20": 0.7961,
+   "top10": 0.5156
   }
  }
 }

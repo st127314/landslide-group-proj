@@ -1,6 +1,10 @@
-"""Shared set-up for the experiment scripts: preprocessing, the three reference models with the hyperparameters chosen
-by the notebook's nested search, the frequency-ratio baseline, and the notebook's hold-out split and buffered spatial
-folds (0.5 degree blocks, 5 km buffer). Imported by run_experiments.py and run_followup_experiments.py."""
+"""Shared set-up for the experiment scripts: preprocessing, the reference models with the hyperparameters chosen by the
+notebook's nested search (read from models/susceptibility/model_metadata.json, so a retrain carries over), the
+frequency-ratio baseline, and the notebook's hold-out split and buffered spatial folds (0.5 degree blocks, 5 km
+buffer). Imported by run_experiments.py and run_followup_experiments.py.
+
+NDVI is loaded but is not a model factor: it was measured after the scar formed (docs/METHODS.md, Known issue 14).
+The experiments that need it (the leakage check, the comparison with the earlier model) ask for WITH_NDVI."""
 import json, os, sys, time, warnings
 from pathlib import Path
 import numpy as np, pandas as pd
@@ -8,6 +12,8 @@ from scipy.spatial import cKDTree
 from sklearn.base import clone
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer, KNNImputer
+from functools import partial
+from sklearn.feature_selection import SelectKBest, mutual_info_classif
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import roc_auc_score, average_precision_score
@@ -34,21 +40,23 @@ GROUPS = {
     'soil': ['soil_texture', 'soil_clay_pct', 'soil_sand_pct', 'soil_bulk_density'],
     'ndvi': ['ndvi'], 'land_cover': ['lulc'], 'lithology': ['lithology'], 'distances': ['dist_to_road', 'dist_to_river'],
 }
-ALL_FEATS = [c for c in sum(GROUPS.values(), []) if c != 'ndvi']
+ALL_FEATS = [c for c in sum(GROUPS.values(), []) if c != 'ndvi']      # the 19 factors of the model
+WITH_NDVI = ALL_FEATS + ['ndvi']                                       # the 20 factors of the earlier model
+PARAMS = json.loads((ROOT / 'models/susceptibility/model_metadata.json').read_text())['best_params']
 
 
 def load(path):
     d = pd.read_csv(path)
-    d = d[[c for c in ['id', 'event_date', 'longitude', 'latitude', 'landslide'] + ALL_FEATS]].reset_index(drop=True)
+    d = d[[c for c in ['id', 'event_date', 'longitude', 'latitude', 'landslide'] + WITH_NDVI]].reset_index(drop=True)
     return d
 
 
-def prep(feats, imputer='median', numeric='clip_power', cat='onehot'):
+def prep(feats, imputer='median', numeric='clip_power', cat='onehot', indicators=True):
     cats = [c for c in CAT_ALL if c in feats]
     nums = [c for c in feats if c not in cats]
     has_aspect = 'aspect' in nums
     num_cols = [c for c in nums if c != 'aspect'] + (['aspect_sin', 'aspect_cos'] if has_aspect else [])
-    imp = SimpleImputer(strategy='median', add_indicator=True) if imputer == 'median' else KNNImputer(n_neighbors=10, add_indicator=True)
+    imp = SimpleImputer(strategy='median', add_indicator=indicators) if imputer == 'median' else KNNImputer(n_neighbors=10, add_indicator=indicators)
     steps = [('imputer', imp)]
     if imputer == 'knn':
         steps = [('scale0', StandardScaler()), ('imputer', imp)]
@@ -68,12 +76,22 @@ def prep(feats, imputer='median', numeric='clip_power', cat='onehot'):
 
 
 def model(name, feats, **kw):
+    """lr, svm, rf: the reference models. lrfs: logistic regression after mutual-information feature selection, the model
+    selected by the nested search (the selection is seeded here; it keeps at most the selected number of inputs)."""
     if name == 'lr':
-        m = LogisticRegression(C=0.017073967431528128, max_iter=5000, class_weight='balanced', random_state=RS)
+        m = LogisticRegression(C=PARAMS['logistic_regression']['model__C'], max_iter=5000, class_weight='balanced', random_state=RS)
+    elif name == 'lrfs':
+        p = PARAMS['logistic_regression_feature_selected']
+        m = LogisticRegression(C=p['model__C'], max_iter=5000, class_weight='balanced', random_state=RS)
+        select = SelectKBest(partial(mutual_info_classif, random_state=RS), k=p['select__k'])
+        return Pipeline([('prep', prep(feats, **kw)), ('select', select), ('m', m)])
     elif name == 'svm':
-        m = SVC(kernel='rbf', C=0.1434715951720141, gamma=0.05399484409787434, class_weight='balanced', random_state=RS)
+        p = PARAMS['svm_rbf']
+        m = SVC(kernel='rbf', C=p['model__C'], gamma=p['model__gamma'], class_weight='balanced', random_state=RS)
     elif name == 'rf':
-        m = RandomForestClassifier(n_estimators=300, max_depth=16, min_samples_leaf=5, max_features='sqrt', class_weight='balanced', n_jobs=-1, random_state=RS)
+        p = PARAMS['random_forest']
+        m = RandomForestClassifier(n_estimators=300, max_depth=p['model__max_depth'], min_samples_leaf=p['model__min_samples_leaf'],
+                                   max_features=p['model__max_features'], class_weight='balanced', n_jobs=-1, random_state=RS)
     return Pipeline([('prep', prep(feats, **kw)), ('m', m)])
 
 

@@ -2,7 +2,8 @@
 
 Uses the same preprocessing, 0.5 degree spatial blocks, 5 km buffer and hold-out fold as
 landslide_susceptibility_modeling.ipynb. Hyperparameters are fixed to the values chosen by the notebook's
-nested search, so each experiment changes only the factor under test.
+nested search, so each experiment changes only the factor under test. The models use the 19 factors without NDVI;
+E3 also reports what adding NDVI back would do, because that gain is the leak that led to its removal.
 
 Run from the project root:
     python notebooks/experiments/run_experiments.py
@@ -22,7 +23,7 @@ from sklearn.metrics import roc_auc_score
 import joblib
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from common import ROOT, OUT, V1_TABLE, FACTOR_GRID, RS, BLOCK, GROUPS, ALL_FEATS, load, model, FrequencyRatio, score, Setup
+from common import ROOT, OUT, V1_TABLE, FACTOR_GRID, RS, BLOCK, GROUPS, ALL_FEATS, WITH_NDVI, load, model, FrequencyRatio, score, Setup
 
 R = {}
 t0 = time.time()
@@ -31,8 +32,8 @@ S2 = Setup(d2)
 R['setup'] = {'n': len(d2), 'holdout_fold': int(S2.fold), 'train': int(len(S2.train)), 'test': int(len(S2.test)), 'outer_fold_sizes': [int(len(v)) for _, v in S2.outer]}
 print('setup', R['setup'], flush=True)
 
-# ---- E2: per-fold logistic regression, SVM and random forest with the baseline preprocessing
-R['E2'] = {m: S2.cv(lambda m=m: model(m, ALL_FEATS), ALL_FEATS) for m in ['lr', 'svm', 'rf']}
+# ---- E2: per-fold logistic regression (plain and with feature selection, the selected model), SVM and random forest
+R['E2'] = {m: S2.cv(lambda m=m: model(m, ALL_FEATS), ALL_FEATS) for m in ['lr', 'lrfs', 'svm', 'rf']}
 R['E2']['frequency_ratio'] = S2.cv(lambda: FrequencyRatio(ALL_FEATS), ALL_FEATS)
 print('E2', {k: v['auc_mean'] for k, v in R['E2'].items()}, round(time.time() - t0), flush=True)
 
@@ -43,8 +44,8 @@ R['E1'] = {m: {k: S2.cv(lambda m=m, kw=kw: model(m, ALL_FEATS, **kw), ALL_FEATS)
 print('E1 done', round(time.time() - t0), flush=True)
 
 # ---- E3 ablation: cumulative groups and leave-one-group-out
-order = ['terrain', 'hydrology', 'soil', 'lithology', 'land_cover', 'distances', 'ndvi']
-R['E3_cumulative'] = {}; R['E3_drop'] = {}
+order = ['terrain', 'hydrology', 'soil', 'lithology', 'land_cover', 'distances']
+R['E3_cumulative'] = {}; R['E3_drop'] = {}; R['E3_with_ndvi'] = {}
 for m in ['lr', 'svm']:
     cum, feats = {}, []
     for g in order:
@@ -52,9 +53,10 @@ for m in ['lr', 'svm']:
         cum['+ ' + g] = S2.cv(lambda m=m, f=list(feats): model(m, f), list(feats))
     R['E3_cumulative'][m] = cum
     R['E3_drop'][m] = {}
-    for g in GROUPS:
+    for g in order:
         f = [c for c in ALL_FEATS if c not in GROUPS[g]]
         R['E3_drop'][m]['without ' + g] = S2.cv(lambda m=m, f=f: model(m, f), f)
+    R['E3_with_ndvi'][m] = S2.cv(lambda m=m: model(m, WITH_NDVI), WITH_NDVI)      # the leak: NDVI sees the scar
     print('E3', m, round(time.time() - t0), flush=True)
 
 # ---- E4 negative sampling: v1 random study-area negatives vs current paired negatives (same pipeline and fold logic)
@@ -103,12 +105,13 @@ for m in ['lr', 'svm']:
     R['E7'][m] = {'clean': R['E2'][m]['auc_mean'], 'noise5_mean': round(float(np.mean(runs)), 4), 'noise5_runs': runs}
 print('E7', R['E7'], round(time.time() - t0), flush=True)
 
-# ---- Partial dependence of the final SVM pipeline (shape of top factors)
-final = joblib.load(ROOT / 'models/susceptibility/svm_rbf_landslide_susceptibility_pipeline.joblib')
+# ---- Partial dependence of the final pipeline (shape of four leading factors)
+BEST = json.loads((ROOT / 'models/susceptibility/model_metadata.json').read_text())['best_model']
+final = joblib.load(ROOT / 'models/susceptibility' / f'{BEST}_landslide_susceptibility_pipeline.joblib')
 sample = d2.sample(1500, random_state=RS)
 feat_cols = final.feature_names_in_ if hasattr(final, 'feature_names_in_') else None
 R['PD'] = {}
-for f in ['ndvi', 'elevation', 'slope', 'dist_to_river']:
+for f in ['elevation', 'ls_factor', 'tpi', 'slope']:       # the three leading factors of F0, and slope
     pdv = partial_dependence(final, sample[list(feat_cols)] if feat_cols is not None else sample, [f], grid_resolution=25, kind='average')
     R['PD'][f] = {'grid': [float(v) for v in pdv['grid_values'][0]], 'avg': [float(v) for v in pdv['average'][0]]}
 print('PD done', round(time.time() - t0), flush=True)
@@ -165,7 +168,7 @@ if grid_dirs:
     grid['lulc'] = grid['lulc'].map(lulc)
     test_ls = S2.test[S2.y[S2.test] == 1]
     dv = {'n_cells_heldout_area': int(len(grid)), 'n_heldout_landslides': int(len(test_ls))}
-    for m in ['lr', 'svm']:
+    for m in ['lr', 'lrfs', 'svm']:
         pp = model(m, ALL_FEATS).fit(d2.iloc[S2.train][ALL_FEATS], S2.y[S2.train])
         cells = score(pp, grid[ALL_FEATS]); pts = score(pp, d2.iloc[test_ls][ALL_FEATS])
         dv[m] = {'top20': round(float((pts >= np.quantile(cells, 0.8)).mean()), 4), 'top10': round(float((pts >= np.quantile(cells, 0.9)).mean()), 4)}

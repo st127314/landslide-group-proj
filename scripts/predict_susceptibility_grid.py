@@ -141,9 +141,10 @@ def main():
             "Grid is 250 m point samples, not the model's native 30 m training resolution -- see "
             "scripts/gee_sample_factor_grid_points.py's docstring for why this is not a meaningful "
             "accuracy loss given the model's 0.5 deg (~55 km) spatial-CV blocks.",
-            "dist_to_fault/dist_to_road/dist_to_river are null for points beyond their 20 km search "
-            "radius (much more common in this regional grid than in the training data, which sat at "
-            "event locations); the trained median imputer fills these the same way it does in training.",
+            "dist_to_road and dist_to_river are blank in most grid tiles and do not agree with the training "
+            "table where they are present (results/experiments/followup.json, F5; docs/METHODS.md, Known "
+            "issue 15); the trained median imputer fills the blanks, so these two factors carry little "
+            "information on the map.",
         ],
     }
     (OUTPUT_DIR / "susceptibility_map_metadata.json").write_text(json.dumps(summary, indent=2))

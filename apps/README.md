@@ -56,7 +56,7 @@ npm run lint && npm run build
 | `/impact` Live Impact | Full-screen map: tambon risk (live impact, terrain tier or rain class; GFS forecast or a what-if rainfall slider; search; click a tambon for its risk, exposure and a 5-day rain chart), a charts panel (tambons rated moderate or above and people at elevated risk by province; tambons with unusual rain on each of the next 5 days) that follows the forecast or the what-if rainfall, the 250 m susceptibility map, facilities, buildings, training/test points |
 | `/warning` Early Warning | Forecast summary, live impact table and the what-if scenario panel |
 | `/model` Model | Method, selected model, comparison table, limitations |
-| `/data` Data | Inventory, the 20 factors and their sources, other datasets, limitations |
+| `/data` Data | Inventory, the 19 factors and their sources, other datasets, limitations |
 
 The live impact class is a transparent rule (terrain tier × how unusual the forecast rain is for the tambon), not a
 validated landslide forecast; read `docs/METHODS.md`, Known issues, before using any number.

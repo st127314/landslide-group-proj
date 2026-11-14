@@ -46,12 +46,9 @@ const FACTOR_GROUPS: Array<{ group: string; source: string; factors: Array<[stri
     factors: [["lithology", "Rock type (categorical)"]],
   },
   {
-    group: "Vegetation and land cover",
-    source: "Landsat 5/7/8/9 and Sentinel-2; SERVIR-Mekong RLCMS with Dynamic World as fallback",
-    factors: [
-      ["ndvi", "Latest valid NDVI in the 90 days before the event day"],
-      ["lulc", "Land cover of the previous year (categorical)"],
-    ],
+    group: "Land cover",
+    source: "SERVIR-Mekong RLCMS with Dynamic World as fallback",
+    factors: [["lulc", "Land cover of the previous year (categorical)"]],
   },
   {
     group: "Human and drainage network",
@@ -101,7 +98,7 @@ export default function DataPage() {
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Landslide events" value="6,180" sub="Point events, 2000–2025" icon={Mountain} />
         <StatCard label="Non-landslide points" value="6,180" sub="One paired point per landslide" icon={CircleDashed} />
-        <StatCard label="Conditioning factors" value={String(factorCount)} sub="17 numeric, 3 categorical" icon={Layers} />
+        <StatCard label="Conditioning factors" value={String(factorCount)} sub="16 numeric, 3 categorical" icon={Layers} />
         <StatCard label="People in study area" value="9.39 M" sub="WorldPop 2020" icon={Users} />
       </section>
 
@@ -171,8 +168,12 @@ export default function DataPage() {
         </div>
         <ul className="mt-4 list-disc space-y-1 pl-5 text-xs leading-relaxed text-muted">
           <li>
-            Missing values are filled inside the model pipeline, fitted on training folds only (largest gaps: NDVI 446
-            rows, soil 132, lithology 46).
+            Missing values are filled inside the model pipeline, fitted on training folds only (largest gaps: soil 132
+            rows, lithology 46).
+          </li>
+          <li>
+            NDVI (vegetation greenness) was extracted but is not used. Each landslide is dated by the satellite image on
+            which its scar was mapped, so the NDVI before that date already shows the scar.
           </li>
           <li>
             Distance to stream was dropped: the pre-2020 hydrology source returned values that are not metres.
